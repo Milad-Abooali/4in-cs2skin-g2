@@ -12,8 +12,6 @@ func Ping(data map[string]interface{}) (models.HandlerOK, models.HandlerError) {
 		resR models.HandlerOK
 	)
 
-	NextGame(1)
-
 	// Success
 	resR.Type = "ping"
 	resR.Data = time.Now().UTC().Format("2006-01-02T15:04:05.000Z")

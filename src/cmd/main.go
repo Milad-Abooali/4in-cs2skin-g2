@@ -41,15 +41,15 @@ func main() {
 	grpcclient.Connect(os.Getenv("CORE_GRPC_ADDRESS"))
 	grpcclient.TestConnection()
 
-	// Sync DB
-	handlers.FillLiveGame()
-
 	// WebSocket
 	ws.EmitEventLoop()
 	http.HandleFunc("/ws", ws.HandleWebSocket)
 
 	// HTTP
 	http.HandleFunc("/web", withAPIVersion(web.HandleHTTP))
+
+	// Sync DB
+	go handlers.NextGame(0)
 
 	port := os.Getenv("PORT")
 	if port == "" {

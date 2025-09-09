@@ -2,12 +2,12 @@ package handlers
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/Milad-Abooali/4in-cs2skin-g2/src/internal/events"
 	"github.com/Milad-Abooali/4in-cs2skin-g2/src/internal/grpcclient"
 	"github.com/Milad-Abooali/4in-cs2skin-g2/src/internal/models"
 	"github.com/Milad-Abooali/4in-cs2skin-g2/src/internal/provablyfair"
 	"github.com/Milad-Abooali/4in-cs2skin-g2/src/utils"
-	"google.golang.org/protobuf/types/known/structpb"
 	"log"
 	"time"
 )
@@ -20,67 +20,7 @@ const (
 )
 
 var LiveGame *models.LiveGame
-var LiveBets map[int64][]models.Bet
-
-func FillLiveGame() (bool, models.HandlerError) {
-	var (
-		errR       models.HandlerError
-		dbLiveGame *structpb.ListValue
-	)
-
-	log.Println("Fill Live Game...")
-
-	// Sanitize and build query
-	query := `SELECT game FROM g2_games WHERE is_live=1`
-
-	// gRPC Call
-	res, err := grpcclient.SendQuery(query)
-	if err != nil || res == nil || res.Status != "ok" {
-		errR.Type = "PROFILE_GRPC_ERROR"
-		errR.Code = 1033
-		if res != nil {
-			errR.Data = res.Error
-		}
-		return false, errR
-	}
-	// Extract gRPC struct
-	dataDB := res.Data.GetFields()
-	// DB result rows count
-	exist := dataDB["count"].GetNumberValue()
-	if exist == 0 {
-		errR.Type = "DB_DATA"
-		errR.Code = 1070
-		return false, errR
-	}
-	// DB result rows get fields
-	dbLiveGame = dataDB["rows"].GetListValue()
-
-	for idx, row := range dbLiveGame.Values {
-		structRow := row.GetStructValue()
-		battleJSON := structRow.Fields["game"].GetStringValue() // JSON string
-
-		var b models.LiveGame
-		err := json.Unmarshal([]byte(battleJSON), &b)
-		if err != nil {
-			log.Println("Failed to unmarshal game:", err)
-			continue
-		}
-
-		key := int64(b.ID)
-		if key == 0 {
-			key = int64(idx + 1)
-		}
-
-		LiveGame = &b
-	}
-
-	if LiveGame == nil {
-		NextGame(0)
-	} else {
-		// Run Game
-	}
-	return true, errR
-}
+var History = NewCrashHistory(25)
 
 func NextGame(id int64) {
 	serverSeed, serverSeedHash := provablyfair.GenerateServerSeed()
@@ -95,25 +35,48 @@ func NextGame(id int64) {
 	}
 
 	// Insert to Database
+	gameJSON, err := json.Marshal(newGame)
+	if err != nil {
+		log.Fatalln("failed to marshal game:", err)
+	}
+	// Sanitize and build query
+	query := fmt.Sprintf(
+		`INSERT INTO g2_games (server_seed,server_seed_hash, game) 
+				VALUES ('%s', '%s', '%s')`,
+		serverSeed,
+		serverSeedHash,
+		string(gameJSON),
+	)
+	// gRPC Call Insert User
+	res, err := grpcclient.SendQuery(query)
+	if err != nil || res == nil || res.Status != "ok" {
+		log.Fatalln("DB_DATA:", err)
+	}
+	dataDB := res.Data.GetFields()
+	newID := int64(dataDB["inserted_id"].GetNumberValue())
+	if newID < 1 {
+		log.Fatalln("DB_DATA:", err)
+	}
 
 	// Update Game ID
-	newGame.ID = id
+	newGame.ID = newID
 
 	// Add To Live Game
 	LiveGame = &models.LiveGame{
 		ID:             newGame.ID,
-		GameState:      1,
+		GameState:      StateWaiting,
 		ServerSeedHash: newGame.ServerSeed,
 		Multiplier:     newGame.Multiplier,
 		ServerTime:     time.Now().UnixMilli(),
 	}
 	events.Emit("all", "liveGame", LiveGame)
-	time.Sleep(5000 * time.Millisecond)
 
 	// Waiting For Bets
+	time.Sleep(5000 * time.Millisecond)
+	LiveGame.GameState = StateRunning
 
 	// Force Start
-	log.Println(newGame)
+	log.Println(newGame.ID, newGame.CrashAt)
 	StartGameLoop(newGame)
 }
 
@@ -126,7 +89,7 @@ func StartGameLoop(game models.Game) {
 				go EndGame(game)
 				break
 			}
-			time.Sleep(100 * time.Millisecond)
+			time.Sleep(250 * time.Millisecond)
 			multiplier += 0.01
 			LiveGame.Multiplier = utils.RoundToTwoDigits(multiplier)
 			LiveGame.ServerTime = time.Now().UnixMilli()
@@ -141,11 +104,35 @@ func StartGameLoop(game models.Game) {
 }
 
 func EndGame(game models.Game) {
-
 	// Update DB
-	game.
-		// Emit History
+	gameJSON, err := json.Marshal(game)
+	if err != nil {
+		log.Fatalln("Failed to marshal game:", err)
+	}
+	// Sanitize and build query
+	query := fmt.Sprintf(
+		`Update g2_games SET game = '%s', is_live=0 WHERE id = %d`,
+		string(gameJSON),
+		game.ID,
+	)
+	res, err := grpcclient.SendQuery(query)
+	if err != nil || res == nil || res.Status != "ok" {
+		log.Fatalln("GRPC_ERROR", err)
+	}
+	dataDB := res.Data.GetFields()
+	exist := dataDB["rows_affected"].GetNumberValue()
+	if exist == 0 {
+		log.Fatalln("NOT_UPDATED", dataDB)
+	}
+	LiveGame.GameState = StateFinished
+	events.Emit("all", "liveGame", LiveGame)
 
-		// Call Next Game
-		NextGame(game.ID + 1)
+	time.Sleep(1000 * time.Millisecond)
+
+	// Emit History
+	History.Add(game.CrashAt)
+	events.Emit("all", "history", History.GetAll())
+
+	// Call Next Game
+	NextGame(game.ID + 1)
 }

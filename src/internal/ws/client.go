@@ -32,6 +32,11 @@ var wsRoutes = map[string]func(*ConnInfo, map[string]interface{}, int64){
 	"ping": func(ci *ConnInfo, d map[string]interface{}, reqId int64) {
 		dispatch(ci, reqId, handlers.Ping, d)
 	},
+
+	// Bet
+	"addBet": func(ci *ConnInfo, d map[string]interface{}, reqId int64) {
+		dispatch(ci, reqId, handlers.AddBet, d)
+	},
 }
 
 func HandleWebSocket(w http.ResponseWriter, r *http.Request) {
