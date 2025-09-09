@@ -18,13 +18,6 @@ const (
 	Multiplier CheckoutBy = "Multiplier"
 )
 
-const (
-	StateWaiting  = 0
-	StateRunning  = 1
-	StateCrashed  = 2
-	StateFinished = 3
-)
-
 type Bet struct {
 	ID         int64       `json:"id"`
 	UserID     int64       `json:"userID"`
@@ -38,10 +31,11 @@ type Bet struct {
 }
 
 type Game struct {
-	ID             int64      `json:"id"`
-	StartAt        time.Time  `json:"StartAt"`
-	EndAt          *time.Time `json:"EndAt"`
-	Multiplier     float64    `json:"Multiplier"`
-	ServerSeedHash string     `json:"serverSeedHash"`
-	ServerSeed     string     `json:"serverSeed"`
+	ID             int64     `json:"id"`
+	StartAt        time.Time `json:"StartAt"`
+	EndAt          time.Time `json:"EndAt"`
+	Multiplier     float64   `json:"Multiplier"`
+	CrashAt        float64   `json:"CrashAt"`
+	ServerSeedHash string    `json:"serverSeedHash"`
+	ServerSeed     string    `json:"serverSeed"`
 }
