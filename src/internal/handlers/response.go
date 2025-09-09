@@ -4,13 +4,14 @@ import (
 	"encoding/json"
 	"github.com/Milad-Abooali/4in-cs2skin-g2/src/configs"
 	errorsreg "github.com/Milad-Abooali/4in-cs2skin-g2/src/internal/errors"
-	"github.com/Milad-Abooali/4in-cs2skin-g2/src/internal/events"
 	"github.com/Milad-Abooali/4in-cs2skin-g2/src/internal/models"
 	"github.com/gorilla/websocket"
 	"log"
 	"net/http"
 	"strconv"
 )
+
+var Heartbeat models.Heartbeat
 
 func SendWSResponse(conn *websocket.Conn, reqId int64, resType string, data interface{}) {
 	resp := models.ReqRes{
@@ -75,18 +76,5 @@ func SendWebError(w http.ResponseWriter, resType string, eCode int, eExtra ...an
 	err := json.NewEncoder(w).Encode(resp)
 	if err != nil {
 		return
-	}
-}
-
-func EmitServer(req map[string]interface{}, resType string, resData interface{}) {
-	switch resType {
-	case "test", "getBots", "getCases", "getBattleHistory":
-		// no emit
-	default:
-		events.Bus <- events.Event{
-			Target: "all",
-			Type:   "heartbeat",
-			Data:   ClientBattleIndex(BattleIndex),
-		}
 	}
 }

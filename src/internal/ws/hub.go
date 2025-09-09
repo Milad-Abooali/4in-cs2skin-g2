@@ -3,7 +3,6 @@ package ws
 import (
 	"encoding/json"
 	"github.com/Milad-Abooali/4in-cs2skin-g2/src/internal/events"
-	"github.com/Milad-Abooali/4in-cs2skin-g2/src/internal/handlers"
 	"sync"
 	"time"
 
@@ -183,18 +182,11 @@ func EmitToGuestsEvent(eventType string, data any) {
 func EmitServer(req map[string]interface{}, resType string, resData interface{}) {
 
 	switch resType {
-	case "test",
-		"getBots",
-		"updateBots",
-		"getCases",
-		"updateCases",
-		"getLiveBattles",
-		"getBattleHistory",
-		"getBattleAdmin":
+	case "test":
 		// No Emit
 
 	default:
-		EmitToAnyEvent("heartbeat", handlers.ClientBattleIndex(handlers.BattleIndex))
+		// EmitToAnyEvent("heartbeat", handlers.Heartbeat)
 	}
 
 }
