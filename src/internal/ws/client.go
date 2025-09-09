@@ -33,36 +33,6 @@ var wsRoutes = map[string]func(*websocket.Conn, map[string]interface{}, int64){
 	"ping": func(c *websocket.Conn, d map[string]interface{}, reqId int64) {
 		dispatch(c, reqId, handlers.Ping, d)
 	},
-	"test": func(c *websocket.Conn, d map[string]interface{}, reqId int64) {
-		dispatch(c, reqId, handlers.Test, d)
-	},
-
-	// Store
-	"getBots": func(c *websocket.Conn, d map[string]interface{}, reqId int64) {
-		dispatch(c, reqId, handlers.GetBots, d)
-	},
-	"getCases": func(c *websocket.Conn, d map[string]interface{}, reqId int64) {
-		dispatch(c, reqId, handlers.GetCases, d)
-	},
-
-	// Database
-	"getBattleHistory": func(c *websocket.Conn, d map[string]interface{}, reqId int64) {
-		dispatch(c, reqId, handlers.GetBattleHistory, d)
-	},
-
-	// User Actions
-	"newBattle": func(c *websocket.Conn, d map[string]interface{}, reqId int64) {
-		dispatch(c, reqId, handlers.NewBattle, d)
-	},
-	"addBot": func(c *websocket.Conn, d map[string]interface{}, reqId int64) {
-		dispatch(c, reqId, handlers.AddBot, d)
-	},
-	"clearSlot": func(c *websocket.Conn, d map[string]interface{}, reqId int64) {
-		dispatch(c, reqId, handlers.ClearSlot, d)
-	},
-	"join": func(c *websocket.Conn, d map[string]interface{}, reqId int64) {
-		dispatch(c, reqId, handlers.Join, d)
-	},
 }
 
 func HandleWebSocket(w http.ResponseWriter, r *http.Request) {
@@ -97,7 +67,7 @@ func HandleWebSocket(w http.ResponseWriter, r *http.Request) {
 		"apiVersion": configs.Version,
 		"serverTime": time.Now().UTC().Format(time.RFC3339),
 	})
-	EmitToAnyEvent("heartbeat", handlers.BuildBattleIndex(handlers.BattleIndex))
+	EmitToAnyEvent("heartbeat", handlers.ClientBattleIndex(handlers.BattleIndex))
 
 	// Fill BattleIndex From DB
 	if len(handlers.BattleIndex) == 0 {

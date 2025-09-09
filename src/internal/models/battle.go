@@ -21,7 +21,8 @@ type StepResult struct {
 type Summery struct {
 	Steps   map[int][]StepResult `json:"steps"` // r1 → [StepResult, StepResult, ...]
 	Winners Team                 `json:"winners"`
-	Prizes  map[string]float64   `json:"prizes"` // s1 → total prize
+	Prizes  map[string]float64   `json:"prizes"`  // s1 → total prize
+	Jackpot map[string]float64   `json:"jackpot"` // s1 → total prize
 }
 
 type HE struct {
@@ -69,6 +70,7 @@ type BattleCreated struct {
 	Cost       float64             `json:"cost"`
 	Slots      map[string]SlotResp `json:"slots"`
 	Status     string              `json:"status"`
+	StatusCode int                 `json:"statusCode"`
 	Summery    Summery             `json:"summery"`
 	CreatedAt  time.Time           `json:"createdAt"`
 	PrivateKey string              `json:"privateKey"`
@@ -99,6 +101,7 @@ type BattleClient struct {
 	StatusCode     int              `json:"statusCode"`
 	Summery        Summery          `json:"summery"`
 	CreatedAt      time.Time        `json:"createdAt"`
+	CreatedBy      int              `json:"createdBy"`
 	UpdatedAt      time.Time        `json:"updatedAt"`
 	ServerSeedHash string           `json:"serverSeedHash"`
 }
