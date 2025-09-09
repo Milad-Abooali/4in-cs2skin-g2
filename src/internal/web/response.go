@@ -1,48 +1,17 @@
-package handlers
+package web
 
 import (
 	"encoding/json"
 	"github.com/Milad-Abooali/4in-cs2skin-g2/src/configs"
 	errorsreg "github.com/Milad-Abooali/4in-cs2skin-g2/src/internal/errors"
 	"github.com/Milad-Abooali/4in-cs2skin-g2/src/internal/models"
-	"github.com/gorilla/websocket"
 	"log"
 	"net/http"
 	"strconv"
 )
 
-var Heartbeat models.Heartbeat
-
-func SendWSResponse(conn *websocket.Conn, reqId int64, resType string, data interface{}) {
-	resp := models.ReqRes{
-		ReqID:  reqId,
-		Type:   resType,
-		Status: 1,
-		Data:   data,
-	}
-	err := conn.WriteJSON(resp)
-	if err != nil {
-		return
-	}
-}
-func SendWSError(conn *websocket.Conn, reqId int64, resType string, eCode int, eExtra ...any) {
-	if configs.Debug {
-		log.Printf("Error %d | %s", eCode, resType)
-	}
-	resp := models.ReqRes{
-		ReqID:  reqId,
-		Type:   resType,
-		Status: 0,
-		Error:  eCode,
-		Data:   eExtra,
-	}
-	err := conn.WriteJSON(resp)
-	if err != nil {
-		return
-	}
-}
-
-func SendWebResponse(w http.ResponseWriter, resType string, data interface{}) {
+// SendResponse HTTP response (success)
+func SendResponse(w http.ResponseWriter, resType string, data interface{}) {
 	resp := models.ReqRes{
 		Type:   resType,
 		Status: 1,
@@ -53,7 +22,9 @@ func SendWebResponse(w http.ResponseWriter, resType string, data interface{}) {
 		return
 	}
 }
-func SendWebError(w http.ResponseWriter, resType string, eCode int, eExtra ...any) {
+
+// SendError HTTP response (error)
+func SendError(w http.ResponseWriter, resType string, eCode int, eExtra ...any) {
 	if configs.Debug {
 		log.Printf("Error %d | %s", eCode, resType)
 	}

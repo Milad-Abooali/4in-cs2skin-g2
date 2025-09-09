@@ -3,42 +3,50 @@ package ws
 import (
 	"encoding/json"
 	"github.com/Milad-Abooali/4in-cs2skin-g2/src/internal/events"
+	"github.com/gorilla/websocket"
 	"sync"
 	"time"
-
-	"github.com/gorilla/websocket"
 )
 
-type connInfo struct {
-	Conn   *websocket.Conn
-	UserID int64
-	mu     sync.Mutex // serialize writes per-connection
+type ConnInfo struct {
+	Conn     *websocket.Conn
+	UserID   int64
+	SendChan chan []byte
 }
 
 var (
 	regMu  sync.RWMutex
-	byConn = make(map[*websocket.Conn]*connInfo)
-	byUser = make(map[int64]map[*websocket.Conn]*connInfo)
+	byConn = make(map[*websocket.Conn]*ConnInfo)
+	byUser = make(map[int64]map[*websocket.Conn]*ConnInfo)
 )
 
-// RegisterConn should be called right after upgrade
+// === Connection Lifecycle ===
+
 func RegisterConn(c *websocket.Conn) {
 	regMu.Lock()
 	defer regMu.Unlock()
+
 	if _, ok := byConn[c]; !ok {
-		byConn[c] = &connInfo{Conn: c, UserID: 0}
+		ci := &ConnInfo{
+			Conn:     c,
+			UserID:   0,
+			SendChan: make(chan []byte, 64),
+		}
+		byConn[c] = ci
+		go ci.startWriter()
 	}
 }
 
-// UnregisterConn should be called on close
 func UnregisterConn(c *websocket.Conn) {
 	regMu.Lock()
 	defer regMu.Unlock()
+
 	ci, ok := byConn[c]
 	if !ok {
 		return
 	}
-	// remove from user bucket if bound
+
+	// Remove from user bucket
 	if ci.UserID != 0 {
 		if set, ok := byUser[ci.UserID]; ok {
 			delete(set, c)
@@ -47,19 +55,22 @@ func UnregisterConn(c *websocket.Conn) {
 			}
 		}
 	}
+
+	// Close writer
+	close(ci.SendChan)
 	delete(byConn, c)
 }
 
-// BindUser binds an existing connection to a userID (after login)
 func BindUser(c *websocket.Conn, userID int64) {
 	regMu.Lock()
 	defer regMu.Unlock()
 
 	ci, ok := byConn[c]
 	if !ok {
-		return // not registered
+		return
 	}
-	// remove from previous bucket
+
+	// Remove from previous bucket
 	if ci.UserID != 0 {
 		if set, ok := byUser[ci.UserID]; ok {
 			delete(set, c)
@@ -68,39 +79,50 @@ func BindUser(c *websocket.Conn, userID int64) {
 			}
 		}
 	}
-	// add to new bucket
+
+	// Add to new bucket
 	ci.UserID = userID
 	if userID != 0 {
 		if byUser[userID] == nil {
-			byUser[userID] = make(map[*websocket.Conn]*connInfo)
+			byUser[userID] = make(map[*websocket.Conn]*ConnInfo)
 		}
 		byUser[userID][c] = ci
 	}
 }
 
-// internal helper: send payload to a list of connections
-func emitToTargets(targets []*connInfo, payload any) {
+// === Writer Goroutine ===
+
+func (ci *ConnInfo) startWriter() {
+	for msg := range ci.SendChan {
+		_ = ci.Conn.WriteMessage(websocket.TextMessage, msg)
+	}
+}
+
+// === Emit Core ===
+
+func emitToTargets(targets []*ConnInfo, payload any) {
 	if len(targets) == 0 {
 		return
 	}
-	// marshal once
 	b, err := json.Marshal(payload)
 	if err != nil {
 		return
 	}
-	// write with per-conn lock to avoid concurrent writes
 	for _, ci := range targets {
-		ci.mu.Lock()
-		_ = ci.Conn.WriteMessage(websocket.TextMessage, b)
-		ci.mu.Unlock()
+		select {
+		case ci.SendChan <- b:
+		default:
+			// Optional: drop or log overflow
+		}
 	}
 }
 
-// EmitToUser sends a JSON payload to all active connections of the user
+// === Emit APIs ===
+
 func EmitToUser(userID int64, payload any) {
 	regMu.RLock()
 	set := byUser[userID]
-	var targets []*connInfo
+	var targets []*ConnInfo
 	for _, ci := range set {
 		targets = append(targets, ci)
 	}
@@ -108,10 +130,9 @@ func EmitToUser(userID int64, payload any) {
 	emitToTargets(targets, payload)
 }
 
-// EmitToAllUsers sends to all logged-in users (with userID != 0)
 func EmitToAllUsers(payload any) {
 	regMu.RLock()
-	var targets []*connInfo
+	var targets []*ConnInfo
 	for _, set := range byUser {
 		for _, ci := range set {
 			targets = append(targets, ci)
@@ -121,10 +142,9 @@ func EmitToAllUsers(payload any) {
 	emitToTargets(targets, payload)
 }
 
-// EmitToAny sends to all connections (logged-in or guest)
 func EmitToAny(payload any) {
 	regMu.RLock()
-	var targets []*connInfo
+	var targets []*ConnInfo
 	for _, ci := range byConn {
 		targets = append(targets, ci)
 	}
@@ -132,10 +152,9 @@ func EmitToAny(payload any) {
 	emitToTargets(targets, payload)
 }
 
-// EmitToGuests sends only to guest connections (userID == 0)
 func EmitToGuests(payload any) {
 	regMu.RLock()
-	var targets []*connInfo
+	var targets []*ConnInfo
 	for _, ci := range byConn {
 		if ci.UserID == 0 {
 			targets = append(targets, ci)
@@ -145,13 +164,13 @@ func EmitToGuests(payload any) {
 	emitToTargets(targets, payload)
 }
 
-// === Event helpers ===
+// === Event Helpers ===
 
 func EmitToUserEvent(userID int64, eventType string, data any) {
 	EmitToUser(userID, map[string]any{
 		"type": eventType,
 		"data": data,
-		"at":   time.Now().UTC().Format(time.RFC3339),
+		"at":   time.Now().UnixMilli(),
 	})
 }
 
@@ -159,7 +178,7 @@ func EmitToAllUsersEvent(eventType string, data any) {
 	EmitToAllUsers(map[string]any{
 		"type": eventType,
 		"data": data,
-		"at":   time.Now().UTC().Format(time.RFC3339),
+		"at":   time.Now().UnixMilli(),
 	})
 }
 
@@ -167,7 +186,7 @@ func EmitToAnyEvent(eventType string, data any) {
 	EmitToAny(map[string]any{
 		"type": eventType,
 		"data": data,
-		"at":   time.Now().UTC().Format(time.RFC3339),
+		"at":   time.Now().UnixMilli(),
 	})
 }
 
@@ -175,21 +194,20 @@ func EmitToGuestsEvent(eventType string, data any) {
 	EmitToGuests(map[string]any{
 		"type": eventType,
 		"data": data,
-		"at":   time.Now().UTC().Format(time.RFC3339),
+		"at":   time.Now().UnixMilli(),
 	})
 }
 
 func EmitServer(req map[string]interface{}, resType string, resData interface{}) {
-
 	switch resType {
 	case "test":
 		// No Emit
-
 	default:
-		// EmitToAnyEvent("heartbeat", handlers.Heartbeat)
+		// Example: EmitToAnyEvent("heartbeat", handlers.LiveGame)
 	}
-
 }
+
+// === Event Loop ===
 
 func EmitEventLoop() {
 	go func() {

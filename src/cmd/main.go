@@ -41,6 +41,9 @@ func main() {
 	grpcclient.Connect(os.Getenv("CORE_GRPC_ADDRESS"))
 	grpcclient.TestConnection()
 
+	// Sync DB
+	handlers.FillLiveGame()
+
 	// WebSocket
 	ws.EmitEventLoop()
 	http.HandleFunc("/ws", ws.HandleWebSocket)
@@ -52,10 +55,6 @@ func main() {
 	if port == "" {
 		port = "8080"
 	}
-
-	handlers.FillBattleIndex()
-	handlers.FillBots()
-	handlers.FillCaseImpact()
 
 	log.Println("Web server running on port", port)
 	log.Fatal(http.ListenAndServe(":"+port, nil))

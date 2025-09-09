@@ -17,21 +17,20 @@ var upgrader = websocket.Upgrader{
 }
 
 // Executes a handler and sends either success or error response back to client
-func dispatch(conn *websocket.Conn, reqId int64, fn func(map[string]interface{}) (models.HandlerOK, models.HandlerError), req map[string]interface{}) {
+func dispatch(ci *ConnInfo, reqId int64, fn func(map[string]interface{}) (models.HandlerOK, models.HandlerError), req map[string]interface{}) {
 	res, err := fn(req)
 	if err.Code > 0 {
-		handlers.SendWSError(conn, reqId, err.Type, err.Code, err.Data)
+		SendError(ci, reqId, err.Type, err.Code, err.Data)
 		return
 	}
-	handlers.SendWSResponse(conn, reqId, res.Type, res.Data)
+	SendResponse(ci, reqId, res.Type, res.Data)
 	EmitServer(req, res.Type, res.Data)
 }
 
 // All WS routes mapped to handlers
-var wsRoutes = map[string]func(*websocket.Conn, map[string]interface{}, int64){
-	// Ping
-	"ping": func(c *websocket.Conn, d map[string]interface{}, reqId int64) {
-		dispatch(c, reqId, handlers.Ping, d)
+var wsRoutes = map[string]func(*ConnInfo, map[string]interface{}, int64){
+	"ping": func(ci *ConnInfo, d map[string]interface{}, reqId int64) {
+		dispatch(ci, reqId, handlers.Ping, d)
 	},
 }
 
@@ -48,6 +47,12 @@ func HandleWebSocket(w http.ResponseWriter, r *http.Request) {
 		_ = conn.Close()
 	}()
 
+	ci := GetConnInfo(conn)
+	if ci == nil {
+		log.Println("Connection not registered")
+		return
+	}
+
 	// App token check
 	if os.Getenv("DEBUG") != "1" {
 		_, token, err := conn.ReadMessage()
@@ -56,23 +61,16 @@ func HandleWebSocket(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		if string(token) != os.Getenv("APP_TOKEN") {
-			handlers.SendWSError(conn, 0, "INVALID_APP_TOKEN", 1001, "")
+			SendError(ci, 0, "INVALID_APP_TOKEN", 1001, "")
 			return
 		}
-
 	}
 
 	// Handshake
-	handlers.SendWSResponse(conn, 1, "handshake", map[string]interface{}{
+	SendResponse(ci, 1, "handshake", map[string]interface{}{
 		"apiVersion": configs.Version,
 		"serverTime": time.Now().UTC().Format(time.RFC3339),
 	})
-	EmitToAnyEvent("heartbeat", handlers.ClientBattleIndex(handlers.BattleIndex))
-
-	// Fill BattleIndex From DB
-	if len(handlers.BattleIndex) == 0 {
-		handlers.FillBattleIndex()
-	}
 
 	// Main loop
 	var msg models.Request
@@ -83,12 +81,12 @@ func HandleWebSocket(w http.ResponseWriter, r *http.Request) {
 			break
 		}
 		if err := json.Unmarshal(data, &msg); err != nil {
-			handlers.SendWSError(conn, 0, "INVALID_JSON_BODY", 1002, "")
+			SendError(ci, 0, "INVALID_JSON_BODY", 1002, "")
 			continue
 		}
 		reqData, ok := msg.Data.(map[string]interface{})
 		if !ok {
-			handlers.SendWSError(conn, 0, "INVALID_DATA_FIELD_TYPE", 1003, "")
+			SendError(ci, 0, "INVALID_DATA_FIELD_TYPE", 1003, "")
 			continue
 		}
 		if configs.Debug {
@@ -97,7 +95,7 @@ func HandleWebSocket(w http.ResponseWriter, r *http.Request) {
 
 		// Special case: bind
 		if msg.Type == "bind" {
-			handlers.SendWSResponse(conn, 1, "bind.ok", map[string]any{
+			SendResponse(ci, 1, "bind.ok", map[string]any{
 				"at": time.Now().UTC().Format(time.RFC3339),
 			})
 			continue
@@ -105,11 +103,17 @@ func HandleWebSocket(w http.ResponseWriter, r *http.Request) {
 
 		// Dispatch via map
 		if fn, found := wsRoutes[msg.Type]; found {
-			fn(conn, reqData, msg.ReqID)
+			fn(ci, reqData, msg.ReqID)
 			continue
 		}
 
 		// Unknown route
-		handlers.SendWSError(conn, 0, "UNKNOWN_ROUTE", 1010, map[string]any{"type": msg.Type})
+		SendError(ci, 0, "UNKNOWN_ROUTE", 1010, map[string]any{"type": msg.Type})
 	}
+}
+
+func GetConnInfo(c *websocket.Conn) *ConnInfo {
+	regMu.RLock()
+	defer regMu.RUnlock()
+	return byConn[c]
 }
