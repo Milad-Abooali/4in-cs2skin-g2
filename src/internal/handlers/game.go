@@ -72,6 +72,10 @@ func NextGame(id int64) {
 	// Update Game ID
 	newGame.ID = newID
 
+	// Clear old Bets
+	LiveBets = make(map[int64][]models.Bet)
+	BetsByMultiplier = make(map[float64][]models.Bet)
+
 	// Add To Live Game
 	LiveGame = &models.LiveGame{
 		ID:             newGame.ID,
