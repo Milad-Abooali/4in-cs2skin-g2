@@ -37,6 +37,22 @@ var wsRoutes = map[string]func(*ConnInfo, map[string]interface{}, int64){
 	"addBet": func(ci *ConnInfo, d map[string]interface{}, reqId int64) {
 		dispatch(ci, reqId, handlers.AddBet, d)
 	},
+	"checkoutBet": func(ci *ConnInfo, d map[string]interface{}, reqId int64) {
+		dispatch(ci, reqId, handlers.CheckoutBet, d)
+	},
+	"getLiveBets": func(ci *ConnInfo, d map[string]interface{}, reqId int64) {
+		dispatch(ci, reqId, handlers.GetLiveBets, d)
+	},
+
+	// Crash History
+	"getHistory": func(ci *ConnInfo, d map[string]interface{}, reqId int64) {
+		dispatch(ci, reqId, handlers.GetHistory, d)
+	},
+
+	// Crash History
+	"getLiveGame": func(ci *ConnInfo, d map[string]interface{}, reqId int64) {
+		dispatch(ci, reqId, handlers.GetLiveGame, d)
+	},
 }
 
 func HandleWebSocket(w http.ResponseWriter, r *http.Request) {

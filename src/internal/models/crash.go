@@ -10,24 +10,16 @@ type LiveGame struct {
 	ServerTime     int64   `json:"serverTime"`
 }
 
-type CheckoutBy string
-
-const (
-	Crash      CheckoutBy = "Crash"
-	User       CheckoutBy = "User"
-	Multiplier CheckoutBy = "Multiplier"
-)
-
 type Bet struct {
-	ID         int64       `json:"id"`
-	UserID     int64       `json:"userID"`
-	GameID     int64       `json:"gameID"`
-	Bet        float64     `json:"bet"`
-	Payout     float64     `json:"payout"`
-	Multiplier float64     `json:"multiplier"`
-	CheckoutOn float64     `json:"checkoutOn"`
-	CheckoutBy *CheckoutBy `json:"CheckoutBy"`
-	CreatedAt  time.Time   `json:"createdAt"`
+	ID         int64     `json:"id"`
+	UserID     int64     `json:"userID"`
+	GameID     int64     `json:"gameID"`
+	Bet        float64   `json:"bet"`
+	Payout     float64   `json:"payout"`
+	Multiplier float64   `json:"multiplier"`
+	CheckoutOn float64   `json:"checkoutOn"`
+	CheckoutBy string    `json:"CheckoutBy"`
+	CreatedAt  time.Time `json:"createdAt"`
 }
 
 type Game struct {
