@@ -93,7 +93,7 @@ func NextGame(id int64) {
 	LiveGame.GameState = StateRunning
 
 	// Force Start
-	log.Printf("Game %d running to %f", newGame.ID, newGame.CrashAt)
+	log.Printf("Game %d running to %.2f", newGame.ID, newGame.CrashAt)
 	startGameLoop(newGame)
 }
 
