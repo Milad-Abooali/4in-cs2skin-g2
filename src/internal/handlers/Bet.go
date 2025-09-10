@@ -219,7 +219,7 @@ func CheckoutBet(data map[string]interface{}) (models.HandlerOK, models.HandlerE
 	}
 
 	// Win Price
-	winAmount := bet.Bet * multiplier
+	winAmount := utils.RoundToTwoDigits(bet.Bet * multiplier)
 
 	// Add Transaction
 	Transaction, err := utils.AddTransaction(
@@ -297,7 +297,7 @@ func processStep(multiplier float64) {
 	}
 	for _, bet := range bets {
 		go func(b models.Bet) {
-			payout := b.Bet * multiplier
+			payout := utils.RoundToTwoDigits(b.Bet * multiplier)
 			sendPayout(b.UserID, b.ID, payout)
 		}(bet)
 	}
