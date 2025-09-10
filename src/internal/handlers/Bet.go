@@ -118,22 +118,23 @@ func AddBet(data map[string]interface{}) (models.HandlerOK, models.HandlerError)
 	// Sanitize and build query
 	query := fmt.Sprintf(
 		`INSERT INTO g2_bets (user_id, game_id, bet) 
-				VALUES (%d, $d, '%s')`,
+				VALUES (%d, %d, '%s')`,
 		newBet.UserID,
 		newBet.GameID,
 		string(betJSON),
 	)
+
 	// gRPC Call Insert User
 	res, err := grpcclient.SendQuery(query)
 	if err != nil || res == nil || res.Status != "ok" {
-		errR.Type = "DB_ERROR"
+		errR.Type = "DB_ERROR_GRPC"
 		errR.Code = 80000
 		return resR, errR
 	}
 	dataDB := res.Data.GetFields()
 	newID := int64(dataDB["inserted_id"].GetNumberValue())
 	if newID < 1 {
-		errR.Type = "DB_ERROR"
+		errR.Type = "DB_ERROR_RES"
 		errR.Code = 8000
 		return resR, errR
 	}

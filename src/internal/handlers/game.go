@@ -20,7 +20,7 @@ const (
 )
 
 var LiveGame *models.LiveGame
-var History = NewCrashHistory(25)
+var History = NewCrashHistory(50)
 
 func NextGame(id int64) {
 	serverSeed, serverSeedHash := provablyfair.GenerateServerSeed()
@@ -72,7 +72,7 @@ func NextGame(id int64) {
 	events.Emit("all", "liveGame", LiveGame)
 
 	// Waiting For Bets
-	time.Sleep(5000 * time.Millisecond)
+	time.Sleep(15000 * time.Millisecond)
 	LiveGame.GameState = StateRunning
 
 	// Force Start

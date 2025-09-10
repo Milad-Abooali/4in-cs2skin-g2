@@ -25,36 +25,42 @@ func GenerateServerSeed() (string, string) {
 	return seed, hex.EncodeToString(hash[:]) // (serverSeed, serverSeedHash)
 }
 
+type RangeWeight struct {
+	Min    float64
+	Max    float64
+	Weight float64
+}
+
+var weightedRanges = []RangeWeight{
+	{Min: 1.0, Max: 6.0, Weight: 0.4},
+	{Min: 6.01, Max: 20.0, Weight: 0.3},
+	{Min: 21.0, Max: 40.0, Weight: 0.2},
+	{Min: 41.0, Max: 60.0, Weight: 0.1},
+	{Min: 61.0, Max: 80.0, Weight: 0.05},
+	{Min: 81.0, Max: 100.0, Weight: 0.01},
+}
+
 func CalculateCrashMultiplier(serverSeed string) float64 {
-	// Step 1: Decode seed
 	seedBytes, err := hex.DecodeString(serverSeed)
 	if err != nil || len(seedBytes) == 0 {
-		return 1.0 // fallback
+		return 1.0
 	}
-
-	// Step 2: HMAC with constant key (optional, for fairness)
 	h := hmac.New(sha256.New, []byte("CrashGame"))
 	h.Write(seedBytes)
 	hash := h.Sum(nil)
-
-	// Step 3: Convert first 8 bytes to uint64
 	num := binary.BigEndian.Uint64(hash[:8])
-
-	// Step 4: Normalize to float between 0 and 1
 	ratio := float64(num) / float64(math.MaxUint64)
-
-	// Step 5: Apply crash formula
-	if ratio < 0.01 {
-		return 1.0 // instant crash
+	accum := 0.0
+	var selected RangeWeight
+	for _, r := range weightedRanges {
+		accum += r.Weight
+		if ratio <= accum {
+			selected = r
+			break
+		}
 	}
-
-	// Example formula: multiplier = floor(100 / (1 - ratio)) / 100
-	multiplier := math.Floor(100/(1.0-ratio)) / 100.0
-
-	// Clamp to max multiplier (e.g. 100x)
-	if multiplier > 100.0 {
-		multiplier = 100.0
-	}
-
-	return multiplier
+	num2 := binary.BigEndian.Uint64(hash[8:16])
+	ratio2 := float64(num2) / float64(math.MaxUint64)
+	multiplier := selected.Min + ratio2*(selected.Max-selected.Min)
+	return math.Round(multiplier*100) / 100
 }
