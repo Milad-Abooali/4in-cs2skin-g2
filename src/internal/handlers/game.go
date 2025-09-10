@@ -35,7 +35,7 @@ func GetLiveGame(data map[string]interface{}) (models.HandlerOK, models.HandlerE
 
 func NextGame(id int64) {
 	serverSeed, serverSeedHash := provablyfair.GenerateServerSeed()
-	crashAt := provablyfair.CalculateCrashMultiplier(serverSeed)
+	crashAt := utils.RoundToTwoDigits(provablyfair.CalculateCrashMultiplier(serverSeed))
 	newGame := models.Game{
 		ID:             id,
 		StartAt:        time.Now().UTC(),
