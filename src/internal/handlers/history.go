@@ -14,7 +14,7 @@ func NewCrashHistory(limit int) *CrashHistory {
 
 func (h *CrashHistory) Add(value float64) {
 	if len(h.data) >= h.size {
-		h.data = h.data[1:] // حذف قدیمی‌ترین
+		h.data = h.data[1:]
 	}
 	h.data = append(h.data, value)
 }

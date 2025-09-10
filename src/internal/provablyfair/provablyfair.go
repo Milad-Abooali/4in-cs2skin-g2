@@ -32,12 +32,13 @@ type RangeWeight struct {
 }
 
 var weightedRanges = []RangeWeight{
-	{Min: 1.0, Max: 6.0, Weight: 0.4},
-	{Min: 6.01, Max: 20.0, Weight: 0.3},
-	{Min: 21.0, Max: 40.0, Weight: 0.2},
-	{Min: 41.0, Max: 60.0, Weight: 0.1},
-	{Min: 61.0, Max: 80.0, Weight: 0.05},
-	{Min: 81.0, Max: 100.0, Weight: 0.01},
+	{Min: 0.01, Max: 5, Weight: 0.40},
+	{Min: 5.01, Max: 10, Weight: 0.30},
+	{Min: 10.01, Max: 20, Weight: 0.20},
+	{Min: 20.01, Max: 35, Weight: 0.09},
+	{Min: 35.01, Max: 50, Weight: 0.07},
+	{Min: 50.01, Max: 80, Weight: 0.03},
+	{Min: 80.01, Max: 100, Weight: 0.01},
 }
 
 func CalculateCrashMultiplier(serverSeed string) float64 {
