@@ -34,7 +34,7 @@ func GetHistory(data map[string]interface{}) (models.HandlerOK, models.HandlerEr
 	)
 
 	// Success
-	resR.Type = "getHistory"
+	resR.Type = "history"
 	resR.Data = History.GetAll()
 	return resR, errR
 }

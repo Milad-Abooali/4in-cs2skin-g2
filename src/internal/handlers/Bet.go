@@ -285,7 +285,7 @@ func GetLiveBets(data map[string]interface{}) (models.HandlerOK, models.HandlerE
 	)
 
 	// Success
-	resR.Type = "getLiveBets"
+	resR.Type = "liveBets"
 	resR.Data = LiveBets
 	return resR, errR
 }
