@@ -8,24 +8,31 @@ import (
 
 	pb "github.com/Milad-Abooali/4in-cs2skin-g2/src/proto"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 )
 
 var client pb.DataServiceClient
 
+// Connect establishes a gRPC connection to the Core service
 func Connect(address string) {
 	log.Println("Connecting to Core gRPC:", address)
 
+	// Use context with timeout to control blocking behavior
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	conn, err := grpc.DialContext(
-		ctx,
+	// New API: grpc.NewClient replaces deprecated Dial / DialContext
+	conn, err := grpc.NewClient(
 		address,
-		grpc.WithInsecure(),
-		grpc.WithBlock(),
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
 	)
 	if err != nil {
-		log.Fatalf("Failed to connect to gRPC Core: %v", err)
+		log.Fatalf("❌ Failed to connect to gRPC Core: %v", err)
+	}
+
+	// Ensure context did not time out while connecting
+	if ctx.Err() != nil {
+		log.Fatalf("❌ Connection attempt failed: %v", ctx.Err())
 	}
 
 	client = pb.NewDataServiceClient(conn)

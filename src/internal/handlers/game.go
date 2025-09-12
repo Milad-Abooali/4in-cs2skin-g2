@@ -89,7 +89,7 @@ func NextGame(id int64) {
 	// Waiting For Bets
 	log.Printf("Game %d waiting for bets", newGame.ID)
 
-	time.Sleep(15000 * time.Millisecond)
+	time.Sleep(30000 * time.Millisecond)
 	LiveGame.GameState = StateRunning
 
 	// Force Start
@@ -99,7 +99,7 @@ func NextGame(id int64) {
 
 func startGameLoop(game models.Game) {
 	go func() {
-		speed := 1000
+		speed := 600
 		multiplier := 0.01
 		for {
 			if LiveGame == nil || LiveGame.GameState != StateRunning {
@@ -107,7 +107,7 @@ func startGameLoop(game models.Game) {
 				go endGame(game)
 				break
 			}
-			if speed > 50 {
+			if speed > 150 {
 				speed--
 			}
 			time.Sleep(time.Duration(speed) * time.Millisecond)
@@ -159,7 +159,7 @@ func endGame(game models.Game) {
 	LiveGame.GameState = StateFinished
 	events.Emit("all", "liveGame", LiveGame)
 
-	time.Sleep(5000 * time.Millisecond)
+	time.Sleep(10000 * time.Millisecond)
 	log.Printf("Game %d Ended", game.ID)
 
 	// Emit History
