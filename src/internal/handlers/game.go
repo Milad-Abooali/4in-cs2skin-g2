@@ -93,7 +93,7 @@ func NextGame(id int64) {
 	LiveGame.GameState = StateBombing
 	log.Printf("Game %d Bombing", newGame.ID)
 	events.Emit("all", "liveGame", LiveGame)
-	time.Sleep(4000 * time.Millisecond)
+	time.Sleep(2000 * time.Millisecond)
 
 	// Force Start
 	LiveGame.GameState = StateRunning
@@ -117,7 +117,7 @@ func startGameLoop(game models.Game) {
 			speed = 1000
 		}
 		if speed < 150 {
-			speed += 150
+			speed += 100
 		}
 		multiplier := 0.01
 		for {
