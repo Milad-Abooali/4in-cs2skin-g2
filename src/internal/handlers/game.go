@@ -29,7 +29,7 @@ func GetLiveGame(_ map[string]interface{}) (models.HandlerOK, models.HandlerErro
 	)
 
 	// Success
-	resR.Type = "liveGame"
+	resR.Type = "getLiveGame"
 	resR.Data = LiveGame
 	return resR, errR
 }
