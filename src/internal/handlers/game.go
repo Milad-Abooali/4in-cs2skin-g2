@@ -99,16 +99,16 @@ func startGameLoop(game models.Game) {
 	go func() {
 		speed := 10000
 		if game.CrashAt < 5 {
-			speed = 50
+			speed = 100
 		}
 		if game.CrashAt > 5 && game.CrashAt < 25 {
-			speed = 250
+			speed = 150
 		}
 		if game.CrashAt > 25 && game.CrashAt < 75 {
-			speed = 750
+			speed = 300
 		}
 		if game.CrashAt > 75 {
-			speed = 1000
+			speed = 500
 		}
 		multiplier := 0.01
 		for {
