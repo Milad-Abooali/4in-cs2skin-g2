@@ -117,7 +117,7 @@ func startGameLoop(game models.Game) {
 			speed = 1000
 		}
 		if speed < 150 {
-			speed += 100
+			speed += 50
 		}
 		multiplier := 0.01
 		for {
