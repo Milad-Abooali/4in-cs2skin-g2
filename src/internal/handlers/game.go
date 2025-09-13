@@ -14,9 +14,9 @@ import (
 
 const (
 	StateWaiting  = 0
-	StateBombing  = 1
-	StateRunning  = 2
-	StateCrashed  = 3
+	StateRunning  = 1
+	StateCrashed  = 2
+	StateBombing  = 3
 	StateFinished = 4
 )
 
