@@ -77,12 +77,6 @@ func NextGame(id int64) {
 	LiveBets = make(map[int64][]models.Bet)
 	BetsByMultiplier = make(map[float64][]models.Bet)
 
-	// Bombing
-	LiveGame.GameState = StateBombing
-	log.Printf("Game %d Bombing", newGame.ID)
-	events.Emit("all", "liveGame", LiveGame)
-	time.Sleep(5000 * time.Millisecond)
-
 	// Waiting for bets
 	LiveGame = &models.LiveGame{
 		ID:             newGame.ID,
@@ -155,6 +149,13 @@ func startGameLoop(game models.Game) {
 }
 
 func endGame(game models.Game) {
+
+	// Bombing
+	LiveGame.GameState = StateBombing
+	log.Printf("Game %d Bombing", game.ID)
+	events.Emit("all", "liveGame", LiveGame)
+	time.Sleep(5000 * time.Millisecond)
+
 	// Update DB
 	gameJSON, err := json.Marshal(game)
 	if err != nil {
@@ -178,7 +179,7 @@ func endGame(game models.Game) {
 	LiveGame.GameState = StateFinished
 	events.Emit("all", "liveGame", LiveGame)
 
-	time.Sleep(10000 * time.Millisecond)
+	time.Sleep(1000 * time.Millisecond)
 	log.Printf("Game %d Ended", game.ID)
 
 	// Emit History
