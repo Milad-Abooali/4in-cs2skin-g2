@@ -154,7 +154,7 @@ func endGame(game models.Game) {
 	LiveGame.GameState = StateBombing
 	log.Printf("Game %d Bombing", game.ID)
 	events.Emit("all", "liveGame", LiveGame)
-	time.Sleep(5000 * time.Millisecond)
+	time.Sleep(3000 * time.Millisecond)
 
 	// Update DB
 	gameJSON, err := json.Marshal(game)
@@ -179,7 +179,7 @@ func endGame(game models.Game) {
 	LiveGame.GameState = StateFinished
 	events.Emit("all", "liveGame", LiveGame)
 
-	time.Sleep(3000 * time.Millisecond)
+	time.Sleep(500 * time.Millisecond)
 	log.Printf("Game %d Ended", game.ID)
 
 	// Emit History
