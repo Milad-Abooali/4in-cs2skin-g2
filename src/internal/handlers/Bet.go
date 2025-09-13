@@ -207,13 +207,13 @@ func CheckoutBet(data map[string]interface{}) (models.HandlerOK, models.HandlerE
 	}
 
 	if bet.Multiplier >= multiplier {
-		errR.Type = "BET_CRASHED"
+		errR.Type = "BET_ALREADY_CRASHED"
 		errR.Code = 8004
 		return resR, errR
 	}
 
 	if bet.Payout > 0 {
-		errR.Type = "BET_PAID"
+		errR.Type = "BET_ALREADY_PAID"
 		errR.Code = 8005
 		return resR, errR
 	}
