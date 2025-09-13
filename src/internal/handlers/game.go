@@ -14,9 +14,10 @@ import (
 
 const (
 	StateWaiting  = 0
-	StateRunning  = 1
-	StateCrashed  = 2
-	StateFinished = 3
+	StateBombing  = 1
+	StateRunning  = 2
+	StateCrashed  = 3
+	StateFinished = 4
 )
 
 var LiveGame *models.LiveGame
@@ -76,7 +77,7 @@ func NextGame(id int64) {
 	LiveBets = make(map[int64][]models.Bet)
 	BetsByMultiplier = make(map[float64][]models.Bet)
 
-	// Add To Live Game
+	// Waiting for bets
 	LiveGame = &models.LiveGame{
 		ID:             newGame.ID,
 		GameState:      StateWaiting,
@@ -84,15 +85,18 @@ func NextGame(id int64) {
 		Multiplier:     newGame.Multiplier,
 		ServerTime:     time.Now().UnixMilli(),
 	}
-	events.Emit("all", "liveGame", LiveGame)
-
-	// Waiting For Bets
 	log.Printf("Game %d waiting for bets", newGame.ID)
-
+	events.Emit("all", "liveGame", LiveGame)
 	time.Sleep(30000 * time.Millisecond)
-	LiveGame.GameState = StateRunning
+
+	// Bombing
+	LiveGame.GameState = StateBombing
+	log.Printf("Game %d Bombing", newGame.ID)
+	events.Emit("all", "liveGame", LiveGame)
+	time.Sleep(4000 * time.Millisecond)
 
 	// Force Start
+	LiveGame.GameState = StateRunning
 	log.Printf("Game %d running to %.2f", newGame.ID, newGame.CrashAt)
 	startGameLoop(newGame)
 }
