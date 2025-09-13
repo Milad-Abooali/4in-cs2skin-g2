@@ -1,6 +1,9 @@
 package handlers
 
-import "github.com/Milad-Abooali/4in-cs2skin-g2/src/internal/models"
+import (
+	"github.com/Milad-Abooali/4in-cs2skin-g2/src/internal/events"
+	"github.com/Milad-Abooali/4in-cs2skin-g2/src/internal/models"
+)
 
 type CrashHistory struct {
 	data []float64
@@ -33,8 +36,10 @@ func GetHistory(data map[string]interface{}) (models.HandlerOK, models.HandlerEr
 		resR models.HandlerOK
 	)
 
+	events.Emit("all", "history", History.GetAll())
+
 	// Success
 	resR.Type = "getHistory"
-	resR.Data = History.GetAll()
+	resR.Data = nil
 	return resR, errR
 }
