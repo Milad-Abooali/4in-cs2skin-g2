@@ -22,7 +22,7 @@ const (
 
 var LiveGame *models.LiveGame
 
-func GetLiveGame(data map[string]interface{}) (models.HandlerOK, models.HandlerError) {
+func GetLiveGame(_ map[string]interface{}) (models.HandlerOK, models.HandlerError) {
 	var (
 		errR models.HandlerError
 		resR models.HandlerOK
