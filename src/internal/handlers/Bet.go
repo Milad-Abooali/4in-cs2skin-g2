@@ -284,9 +284,10 @@ func GetLiveBets(data map[string]interface{}) (models.HandlerOK, models.HandlerE
 		resR models.HandlerOK
 	)
 
+	events.Emit("all", "liveBets", LiveBets)
+
 	// Success
 	resR.Type = "getLiveBets"
-	resR.Data = LiveBets
 	return resR, errR
 }
 

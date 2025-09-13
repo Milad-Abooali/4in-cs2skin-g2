@@ -30,7 +30,7 @@ func (h *CrashHistory) GetAll() []float64 {
 	return h.data
 }
 
-func GetHistory(data map[string]interface{}) (models.HandlerOK, models.HandlerError) {
+func GetHistory(_ map[string]interface{}) (models.HandlerOK, models.HandlerError) {
 	var (
 		errR models.HandlerError
 		resR models.HandlerOK
@@ -40,6 +40,5 @@ func GetHistory(data map[string]interface{}) (models.HandlerOK, models.HandlerEr
 
 	// Success
 	resR.Type = "getHistory"
-	resR.Data = nil
 	return resR, errR
 }

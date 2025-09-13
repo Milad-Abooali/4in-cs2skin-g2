@@ -28,9 +28,10 @@ func GetLiveGame(_ map[string]interface{}) (models.HandlerOK, models.HandlerErro
 		resR models.HandlerOK
 	)
 
+	events.Emit("all", "liveGame", LiveGame)
+
 	// Success
 	resR.Type = "getLiveGame"
-	resR.Data = LiveGame
 	return resR, errR
 }
 
