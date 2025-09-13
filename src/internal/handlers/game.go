@@ -87,7 +87,7 @@ func NextGame(id int64) {
 	}
 	log.Printf("Game %d waiting for bets", newGame.ID)
 	events.Emit("all", "liveGame", LiveGame)
-	time.Sleep(25000 * time.Millisecond)
+	time.Sleep(30000 * time.Millisecond)
 
 	// Force Start
 	LiveGame.GameState = StateRunning
