@@ -103,7 +103,10 @@ func NextGame(id int64) {
 
 func startGameLoop(game models.Game) {
 	go func() {
-		speed := 500
+		speed := 30000 / game.CrashAt
+		if speed < 150 {
+			speed += 150
+		}
 		multiplier := 0.01
 		for {
 			if LiveGame == nil || LiveGame.GameState != StateRunning {
