@@ -110,9 +110,6 @@ func startGameLoop(game models.Game) {
 		if game.CrashAt > 75 {
 			speed = 1000
 		}
-		if speed < 150 {
-			speed += 50
-		}
 		multiplier := 0.01
 		for {
 			if LiveGame == nil || LiveGame.GameState != StateRunning {
@@ -120,7 +117,7 @@ func startGameLoop(game models.Game) {
 				go endGame(game)
 				break
 			}
-			if speed > 50 {
+			if speed > 25 {
 				speed--
 			}
 			time.Sleep(time.Duration(speed) * time.Millisecond)
@@ -149,6 +146,7 @@ func startGameLoop(game models.Game) {
 }
 
 func endGame(game models.Game) {
+	time.Sleep(50 * time.Millisecond)
 
 	// Bombing
 	LiveGame.GameState = StateBombing
