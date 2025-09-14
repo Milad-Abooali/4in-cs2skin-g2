@@ -76,7 +76,7 @@ func NextGame(id int64) {
 
 	// Clear old Bets
 	LiveBets = make(map[int64][]models.Bet)
-	BetsByMultiplier = make(map[float64][]models.Bet)
+	BetsByMultiplier = make(map[int][]models.Bet)
 
 	// Waiting for bets
 	LiveGame = &models.LiveGame{
