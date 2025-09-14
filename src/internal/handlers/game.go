@@ -98,7 +98,7 @@ func NextGame(id int64) {
 
 func startGameLoop(game models.Game) {
 	go func() {
-		speed := 500
+		speed := 250
 		if game.CrashAt < 5 {
 			speed -= 100
 		}
@@ -118,7 +118,7 @@ func startGameLoop(game models.Game) {
 				go endGame(game)
 				break
 			}
-			if speed > 50 {
+			if speed > 25 {
 				speed--
 			}
 			time.Sleep(time.Duration(speed) * time.Millisecond)
