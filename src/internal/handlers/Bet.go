@@ -205,6 +205,7 @@ func CheckoutBet(data map[string]interface{}) (models.HandlerOK, models.HandlerE
 	}
 
 	// Get Bet
+	println(userID, betID)
 	bet, ok := getBet(int64(userID), int(betID))
 	if !ok {
 		errR.Type = "BET_NOT_FOUND"
