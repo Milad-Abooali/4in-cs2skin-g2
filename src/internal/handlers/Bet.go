@@ -66,6 +66,7 @@ func AddBet(data map[string]interface{}) (models.HandlerOK, models.HandlerError)
 	}
 
 	// Check Bet
+	log.Println("add Bet multiplier", data["multiplier"])
 	multiplier, vErr, ok := validate.RequireFloat(data, "multiplier")
 	if !ok {
 		return resR, vErr
