@@ -9,12 +9,13 @@ import (
 	"github.com/Milad-Abooali/4in-cs2skin-g2/src/internal/validate"
 	"github.com/Milad-Abooali/4in-cs2skin-g2/src/utils"
 	"log"
+	"math"
 	"strconv"
 	"time"
 )
 
 var LiveBets map[int64][]models.Bet
-var BetsByMultiplier map[float64][]models.Bet
+var BetsByMultiplier = make(map[int][]models.Bet) // int key (multiplier*100)
 
 func AddBet(data map[string]interface{}) (models.HandlerOK, models.HandlerError) {
 	var (
@@ -153,7 +154,9 @@ func AddBet(data map[string]interface{}) (models.HandlerOK, models.HandlerError)
 	LiveBets[int64(userID)] = append(LiveBets[int64(userID)], newBet)
 	events.Emit("all", "liveBets", LiveBets)
 
-	BetsByMultiplier[newBet.Multiplier] = append(BetsByMultiplier[newBet.Multiplier], newBet)
+	// Update BetsByMultiplier
+	key := int(math.Round(newBet.Multiplier * 100)) // bucket with 2 decimals
+	BetsByMultiplier[key] = append(BetsByMultiplier[key], newBet)
 
 	// Success
 	resR.Type = "addBet"
@@ -299,19 +302,21 @@ func GetLiveBets(_ map[string]interface{}) (models.HandlerOK, models.HandlerErro
 }
 
 func processStep(multiplier float64) {
-	bets, ok := BetsByMultiplier[multiplier]
-	if !ok {
-		return
-	}
-	for _, bet := range bets {
-		go func(b models.Bet) {
-			payout := utils.RoundToTwoDigits(b.Bet * multiplier)
-			log.Println("sendPayout:", b.ID)
-			sendPayout(b.UserID, b.ID, payout)
-		}(bet)
+	current := int(math.Round(multiplier * 100)) // current game multiplier scaled
+	var toPay []models.Bet
+
+	for key, arr := range BetsByMultiplier {
+		if key <= current {
+			toPay = append(toPay, arr...)
+			delete(BetsByMultiplier, key) // prevent double payout
+		}
 	}
 
-	// delete(BetsByMultiplier, multiplier)
+	for _, bet := range toPay {
+		payout := utils.RoundToTwoDigits(bet.Bet * multiplier)
+		log.Println("sendPayout:", bet.ID)
+		go sendPayout(bet.UserID, bet.ID, payout)
+	}
 }
 
 func sendPayout(userID int64, betID int64, payout float64) {
