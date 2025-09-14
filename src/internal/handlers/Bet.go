@@ -87,8 +87,8 @@ func AddBet(data map[string]interface{}) (models.HandlerOK, models.HandlerError)
 	Transaction, err := utils.AddTransaction(
 		userID,
 		"game_loss",
-		"2",
-		bet,
+		strconv.FormatInt(LiveGame.ID, 10),
+		utils.RoundToTwoDigits(bet),
 		"",
 		"Crash",
 	)
@@ -108,13 +108,13 @@ func AddBet(data map[string]interface{}) (models.HandlerOK, models.HandlerError)
 	// Creat Bet
 	newBet := models.Bet{
 		ID:          0,
-		Bet:         bet,
+		Bet:         utils.RoundToTwoDigits(bet),
 		GameID:      LiveGame.ID,
 		UserID:      int64(userID),
 		Avatar:      avatar,
 		XP:          xp,
 		DisplayName: displayName,
-		Multiplier:  multiplier,
+		Multiplier:  utils.RoundToTwoDigits(multiplier),
 		CreatedAt:   time.Now().UTC(),
 	}
 
