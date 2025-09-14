@@ -50,6 +50,9 @@ func AddBet(data map[string]interface{}) (models.HandlerOK, models.HandlerError)
 	userData := resp["data"].(map[string]interface{})
 	profile := userData["profile"].(map[string]interface{})
 	userID := int(profile["id"].(float64))
+	xp := int(profile["xp"].(float64))
+	avatar := fmt.Sprintf("https://static.cs2skin.com/files/avatars/users/%s.webp", utils.MD5UserID(userID))
+	displayName := fmt.Sprintf("%v", profile["display_name"])
 	balanceStr := fmt.Sprintf("%v", profile["balance"])
 	balance, err := strconv.ParseFloat(balanceStr, 64)
 	if err != nil {
@@ -103,12 +106,15 @@ func AddBet(data map[string]interface{}) (models.HandlerOK, models.HandlerError)
 
 	// Creat Bet
 	newBet := models.Bet{
-		ID:         0,
-		Bet:        bet,
-		GameID:     LiveGame.ID,
-		UserID:     int64(userID),
-		Multiplier: multiplier,
-		CreatedAt:  time.Now().UTC(),
+		ID:          0,
+		Bet:         bet,
+		GameID:      LiveGame.ID,
+		UserID:      int64(userID),
+		Avatar:      avatar,
+		XP:          xp,
+		DisplayName: displayName,
+		Multiplier:  multiplier,
+		CreatedAt:   time.Now().UTC(),
 	}
 
 	// Insert to Database

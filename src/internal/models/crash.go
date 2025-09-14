@@ -11,18 +11,18 @@ type LiveGame struct {
 }
 
 type Bet struct {
-	ID         int64     `json:"id"`
-	UserID     int64     `json:"userID"`
-	Username   string    `json:"username"`
-	Avatar     string    `json:"avatar"`
-	XPLevel    int       `json:"xpLevel"`
-	GameID     int64     `json:"gameID"`
-	Bet        float64   `json:"bet"`
-	Payout     float64   `json:"payout"`
-	Multiplier float64   `json:"multiplier"`
-	CheckoutOn float64   `json:"checkoutOn"`
-	CheckoutBy string    `json:"checkoutBy"`
-	CreatedAt  time.Time `json:"createdAt"`
+	ID          int64     `json:"id"`
+	UserID      int64     `json:"userID"`
+	DisplayName string    `json:"displayName"`
+	Avatar      string    `json:"avatar"`
+	XP          int       `json:"xp"`
+	GameID      int64     `json:"gameID"`
+	Bet         float64   `json:"bet"`
+	Payout      float64   `json:"payout"`
+	Multiplier  float64   `json:"multiplier"`
+	CheckoutOn  float64   `json:"checkoutOn"`
+	CheckoutBy  string    `json:"checkoutBy"`
+	CreatedAt   time.Time `json:"createdAt"`
 }
 
 type Game struct {
