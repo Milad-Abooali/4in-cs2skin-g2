@@ -111,7 +111,7 @@ func startGameLoop(game models.Game) {
 		if game.CrashAt > 75 {
 			speed -= 300
 		}
-		multiplier := 1.00
+		multiplier := 0.99
 		for {
 			if LiveGame == nil || LiveGame.GameState != StateRunning {
 				game.EndAt = time.Now().UTC()

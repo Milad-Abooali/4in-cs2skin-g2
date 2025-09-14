@@ -306,15 +306,16 @@ func processStep(multiplier float64) {
 	for _, bet := range bets {
 		go func(b models.Bet) {
 			payout := utils.RoundToTwoDigits(b.Bet * multiplier)
+			log.Println("sendPayout:", b.ID)
 			sendPayout(b.UserID, b.ID, payout)
 		}(bet)
 	}
+
 	// delete(BetsByMultiplier, multiplier)
 }
 
 func sendPayout(userID int64, betID int64, payout float64) {
-
-	// Get Bet
+	// Get Bet by ID (returns pointer)
 	bet, ok := getBet(userID, betID)
 	if !ok {
 		return
@@ -341,20 +342,18 @@ func sendPayout(userID int64, betID int64, payout float64) {
 		return
 	}
 
+	// Update bet in memory (no need to reassign slice element)
 	bet.Payout = payout
 	bet.CheckoutBy = "Multiplier"
-
-	// Update Live Bets
-	LiveBets[userID][betID] = *bet
 
 	// Update DB
 	betJSON, err := json.Marshal(bet)
 	if err != nil {
 		log.Fatalln("Failed to marshal bet:", err)
 	}
-	// Sanitize and build query
+
 	query := fmt.Sprintf(
-		`Update g2_bets SET bet = '%s', WHERE id = %d`,
+		`UPDATE g2_bets SET bet = '%s' WHERE id = %d`,
 		string(betJSON),
 		bet.ID,
 	)
@@ -369,9 +368,6 @@ func sendPayout(userID int64, betID int64, payout float64) {
 	}
 
 	events.Emit("all", "liveBets", LiveBets)
-
-	// Success
-	return
 }
 
 func getBet(userID, betID int64) (*models.Bet, bool) {
