@@ -205,7 +205,6 @@ func CheckoutBet(data map[string]interface{}) (models.HandlerOK, models.HandlerE
 	}
 
 	// Get Bet
-	log.Println(userID, betID)
 	bet, ok := getBet(int64(userID), betID)
 	if !ok {
 		errR.Type = "BET_NOT_FOUND"
@@ -213,7 +212,7 @@ func CheckoutBet(data map[string]interface{}) (models.HandlerOK, models.HandlerE
 		return resR, errR
 	}
 
-	if bet.Multiplier >= multiplier {
+	if bet.Multiplier <= multiplier {
 		errR.Type = "BET_ALREADY_CRASHED"
 		errR.Code = 8004
 		return resR, errR
