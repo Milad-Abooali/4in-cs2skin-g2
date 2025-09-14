@@ -206,7 +206,7 @@ func CheckoutBet(data map[string]interface{}) (models.HandlerOK, models.HandlerE
 
 	// Get Bet
 	log.Println(userID, betID)
-	bet, ok := getBet(int64(userID), int(betID))
+	bet, ok := getBet(int64(userID), betID)
 	if !ok {
 		errR.Type = "BET_NOT_FOUND"
 		errR.Code = 8003
@@ -254,7 +254,7 @@ func CheckoutBet(data map[string]interface{}) (models.HandlerOK, models.HandlerE
 	bet.CheckoutBy = "User"
 
 	// Update Live Bets
-	LiveBets[int64(userID)][betID] = bet
+	LiveBets[int64(userID)][betID] = *bet
 
 	// Update DB
 	betJSON, err := json.Marshal(bet)
@@ -315,7 +315,7 @@ func processStep(multiplier float64) {
 func sendPayout(userID int64, betID int64, payout float64) {
 
 	// Get Bet
-	bet, ok := getBet(userID, int(betID))
+	bet, ok := getBet(userID, betID)
 	if !ok {
 		return
 	}
@@ -345,7 +345,7 @@ func sendPayout(userID int64, betID int64, payout float64) {
 	bet.CheckoutBy = "Multiplier"
 
 	// Update Live Bets
-	LiveBets[userID][betID] = bet
+	LiveBets[userID][betID] = *bet
 
 	// Update DB
 	betJSON, err := json.Marshal(bet)
@@ -374,13 +374,15 @@ func sendPayout(userID int64, betID int64, payout float64) {
 	return
 }
 
-func getBet(userID int64, betID int) (models.Bet, bool) {
+func getBet(userID, betID int64) (*models.Bet, bool) {
 	bets, ok := LiveBets[userID]
 	if !ok {
-		return models.Bet{}, false
+		return nil, false
 	}
-	if betID < 0 || betID >= len(bets) {
-		return models.Bet{}, false
+	for i := range bets {
+		if bets[i].ID == betID {
+			return &bets[i], true
+		}
 	}
-	return bets[betID], true
+	return nil, false
 }
