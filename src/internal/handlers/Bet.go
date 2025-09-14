@@ -302,20 +302,14 @@ func GetLiveBets(_ map[string]interface{}) (models.HandlerOK, models.HandlerErro
 }
 
 func processStep(multiplier float64) {
-	current := int(math.Round(multiplier * 100)) // current game multiplier scaled
-	var toPay []models.Bet
-
-	for key, arr := range BetsByMultiplier {
-		if key <= current {
-			toPay = append(toPay, arr...)
-			delete(BetsByMultiplier, key) // prevent double payout
+	for _, bets := range LiveBets {
+		for _, bet := range bets {
+			if bet.Payout == 0 && multiplier >= bet.Multiplier {
+				payout := utils.RoundToTwoDigits(bet.Bet * multiplier)
+				log.Println("Triggered payout:", bet.ID, "at", multiplier)
+				sendPayout(bet.UserID, bet.ID, payout)
+			}
 		}
-	}
-
-	for _, bet := range toPay {
-		payout := utils.RoundToTwoDigits(bet.Bet * multiplier)
-		log.Println("sendPayout:", bet.ID)
-		go sendPayout(bet.UserID, bet.ID, payout)
 	}
 }
 
