@@ -151,7 +151,7 @@ func AddBet(data map[string]interface{}) (models.HandlerOK, models.HandlerError)
 
 	// Success
 	resR.Type = "addBet"
-	resR.Data = nil
+	resR.Data = newBet
 	return resR, errR
 }
 
