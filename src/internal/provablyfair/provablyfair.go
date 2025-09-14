@@ -33,9 +33,9 @@ type RangeWeight struct {
 
 var weightedRanges = []RangeWeight{
 	{Min: 0.01, Max: 1, Weight: 0},
-	{Min: 1.01, Max: 5, Weight: 0.35},
-	{Min: 5.01, Max: 10, Weight: 0.35},
-	{Min: 10.01, Max: 20, Weight: 0.20},
+	{Min: 1.01, Max: 5, Weight: 0.50},
+	{Min: 5.01, Max: 10, Weight: 0.20},
+	{Min: 10.01, Max: 20, Weight: 0.10},
 	{Min: 20.01, Max: 35, Weight: 0.09},
 	{Min: 35.01, Max: 50, Weight: 0.07},
 	{Min: 50.01, Max: 80, Weight: 0.03},
