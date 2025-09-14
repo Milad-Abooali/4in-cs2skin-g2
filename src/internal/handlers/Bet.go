@@ -256,9 +256,6 @@ func CheckoutBet(data map[string]interface{}) (models.HandlerOK, models.HandlerE
 
 	log.Println("Bet:", bet)
 
-	// Update Live Bets
-	LiveBets[int64(userID)][betID] = *bet
-
 	// Update DB
 	betJSON, err := json.Marshal(bet)
 	if err != nil {
