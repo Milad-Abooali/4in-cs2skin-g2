@@ -227,6 +227,8 @@ func CheckoutBet(data map[string]interface{}) (models.HandlerOK, models.HandlerE
 	// Win Price
 	winAmount := utils.RoundToTwoDigits(bet.Bet * multiplier)
 
+	log.Println("Win Amount:", winAmount)
+
 	// Add Transaction
 	Transaction, err := utils.AddTransaction(
 		userID,
@@ -251,6 +253,8 @@ func CheckoutBet(data map[string]interface{}) (models.HandlerOK, models.HandlerE
 
 	bet.Payout = winAmount
 	bet.CheckoutBy = "User"
+
+	log.Println("Bet:", bet)
 
 	// Update Live Bets
 	LiveBets[int64(userID)][betID] = *bet
