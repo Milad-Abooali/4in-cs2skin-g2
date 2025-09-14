@@ -178,7 +178,7 @@ func endGame(game models.Game) {
 	LiveGame.GameState = StateFinished
 	events.Emit("all", "liveGame", LiveGame)
 
-	time.Sleep(1000 * time.Millisecond)
+	time.Sleep(50 * time.Millisecond)
 	log.Printf("Game %d Ended", game.ID)
 
 	// Emit History
