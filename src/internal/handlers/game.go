@@ -16,7 +16,6 @@ const (
 	StateWaiting  = 0
 	StateRunning  = 1
 	StateCrashed  = 2
-	StateBombing  = 3
 	StateFinished = 4
 )
 
@@ -97,6 +96,9 @@ func NextGame(id int64) {
 }
 
 func startGameLoop(game models.Game) {
+	events.Emit("all", "liveGame", LiveGame)
+	time.Sleep(5000 * time.Millisecond)
+
 	go func() {
 		speed := 500
 		if game.CrashAt < 5 {
@@ -147,12 +149,6 @@ func startGameLoop(game models.Game) {
 }
 
 func endGame(game models.Game) {
-	time.Sleep(3000 * time.Millisecond)
-
-	// Bombing
-	LiveGame.GameState = StateBombing
-	log.Printf("Game %d Bombing", game.ID)
-	events.Emit("all", "liveGame", LiveGame)
 	time.Sleep(3000 * time.Millisecond)
 
 	// Update DB
