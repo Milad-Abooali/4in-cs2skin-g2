@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"log"
 	"sync"
 
 	"github.com/Milad-Abooali/4in-cs2skin-g2/src/internal/events"
@@ -27,6 +28,8 @@ func NewCrashLeaderboard(limit int) *CrashLeaderboard {
 
 // Add a new paid bet to leaderboard
 func (lb *CrashLeaderboard) Add(bet models.Bet) {
+	log.Println("Leaderboard Add called", bet.ID, bet.Payout)
+
 	lb.mu.Lock()
 	defer lb.mu.Unlock()
 
@@ -61,6 +64,5 @@ func GetLeaderboard(_ map[string]interface{}) (models.HandlerOK, models.HandlerE
 
 	// Success -
 	resR.Type = "getLeaderboard"
-	resR.Data = Leaderboard.GetAll()
 	return resR, errR
 }
