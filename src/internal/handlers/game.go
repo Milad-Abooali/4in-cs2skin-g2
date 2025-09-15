@@ -149,7 +149,7 @@ func startGameLoop(game models.Game) {
 }
 
 func endGame(game models.Game) {
-	time.Sleep(3000 * time.Millisecond)
+	time.Sleep(2000 * time.Millisecond)
 
 	// Update DB
 	gameJSON, err := json.Marshal(game)
