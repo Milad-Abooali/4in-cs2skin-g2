@@ -31,19 +31,20 @@ func (lb *CrashLeaderboard) Add(bet models.Bet) {
 	log.Println("Leaderboard Add called", bet.ID, bet.Payout)
 
 	lb.mu.Lock()
-	defer lb.mu.Unlock()
-
 	if len(lb.data) >= lb.size {
-		lb.data = lb.data[1:] // remove oldest
+		lb.data = lb.data[1:]
 	}
 	lb.data = append(lb.data, bet)
 
-	log.Println("leaderboard", lb.GetAll())
+	// make a snapshot while holding the lock
+	snapshot := make([]models.Bet, len(lb.data))
+	copy(snapshot, lb.data)
+	lb.mu.Unlock() // 🔓 unlock before logging/emitting
 
-	log.Println(">>> BEFORE EMIT")
-	events.Emit("all", "leaderboard", lb.GetAll())
-	log.Println(">>> AFTER EMIT")
+	log.Printf("Leaderboard snapshot size=%d lastID=%d\n", len(snapshot), snapshot[len(snapshot)-1].ID)
 
+	// emit outside the lock (non-blocking)
+	go events.Emit("all", "leaderboard", snapshot)
 }
 
 // GetAll returns a snapshot of leaderboard
