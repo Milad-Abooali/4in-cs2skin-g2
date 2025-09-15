@@ -230,8 +230,6 @@ func CheckoutBet(data map[string]interface{}) (models.HandlerOK, models.HandlerE
 	// Win Price
 	winAmount := utils.RoundToTwoDigits(bet.Bet * multiplier)
 
-	log.Println("Win Amount:", winAmount)
-
 	// Add Transaction
 	Transaction, err := utils.AddTransaction(
 		userID,
@@ -256,8 +254,6 @@ func CheckoutBet(data map[string]interface{}) (models.HandlerOK, models.HandlerE
 
 	bet.Payout = winAmount
 	bet.CheckoutBy = "User"
-
-	log.Println("Bet:", bet)
 
 	// Update DB
 	betJSON, err := json.Marshal(bet)
@@ -306,7 +302,6 @@ func processStep(multiplier float64) {
 		for _, bet := range bets {
 			if bet.Payout == 0 && multiplier >= bet.Multiplier {
 				payout := utils.RoundToTwoDigits(bet.Bet * multiplier)
-				log.Println("Triggered payout:", bet.ID, "at", multiplier)
 				sendPayout(bet.UserID, bet.ID, payout)
 			}
 		}
