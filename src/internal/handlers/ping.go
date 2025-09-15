@@ -7,7 +7,7 @@ import (
 )
 
 // Ping - Handler
-func Ping(data map[string]interface{}) (models.HandlerOK, models.HandlerError) {
+func Ping(_ map[string]interface{}) (models.HandlerOK, models.HandlerError) {
 	var (
 		errR models.HandlerError
 		resR models.HandlerOK
