@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"log"
 	"sync"
 
 	"github.com/Milad-Abooali/4in-cs2skin-g2/src/internal/events"
@@ -28,8 +27,6 @@ func NewCrashLeaderboard(limit int) *CrashLeaderboard {
 
 // Add a new paid bet to leaderboard
 func (lb *CrashLeaderboard) Add(bet models.Bet) {
-	log.Println("Leaderboard Add called", bet.ID, bet.Payout)
-
 	lb.mu.Lock()
 	if len(lb.data) >= lb.size {
 		lb.data = lb.data[1:]
@@ -40,8 +37,6 @@ func (lb *CrashLeaderboard) Add(bet models.Bet) {
 	snapshot := make([]models.Bet, len(lb.data))
 	copy(snapshot, lb.data)
 	lb.mu.Unlock() // 🔓 unlock before logging/emitting
-
-	log.Printf("Leaderboard snapshot size=%d lastID=%d\n", len(snapshot), snapshot[len(snapshot)-1].ID)
 
 	// emit outside the lock (non-blocking)
 	go events.Emit("all", "leaderboard", snapshot)

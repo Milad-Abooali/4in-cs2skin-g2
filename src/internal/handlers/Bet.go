@@ -201,8 +201,6 @@ func CheckoutBet(data map[string]interface{}) (models.HandlerOK, models.HandlerE
 	profile := userData["profile"].(map[string]interface{})
 	userID := int(profile["id"].(float64))
 
-	log.Println("checkout:", userID, data["betID"])
-
 	// Check Bet
 	betID, vErr, ok := validate.RequireInt(data, "betID")
 	if !ok {
@@ -216,8 +214,6 @@ func CheckoutBet(data map[string]interface{}) (models.HandlerOK, models.HandlerE
 		errR.Code = 8003
 		return resR, errR
 	}
-
-	log.Println("checkout > bet", bet)
 
 	if bet.Multiplier <= multiplier {
 		errR.Type = "BET_ALREADY_CRASHED"
