@@ -280,6 +280,8 @@ func CheckoutBet(data map[string]interface{}) (models.HandlerOK, models.HandlerE
 		log.Fatalln("NOT_UPDATED", dataDB)
 	}
 
+	Leaderboard.Add(*bet)
+
 	events.Emit("all", "liveBets", LiveBets)
 
 	// Success
@@ -365,6 +367,7 @@ func sendPayout(userID int64, betID int64, payout float64) {
 		log.Fatalln("NOT_UPDATED", dataDB)
 	}
 
+	Leaderboard.Add(*bet)
 	events.Emit("all", "liveBets", LiveBets)
 }
 

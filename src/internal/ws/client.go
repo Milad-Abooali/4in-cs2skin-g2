@@ -50,6 +50,11 @@ var wsRoutes = map[string]func(*ConnInfo, map[string]interface{}, int64){
 	},
 
 	// Crash History
+	"getLeaderboard": func(ci *ConnInfo, d map[string]interface{}, reqId int64) {
+		dispatch(ci, reqId, handlers.GetLeaderboard, d)
+	},
+
+	// Crash History
 	"getLiveGame": func(ci *ConnInfo, d map[string]interface{}, reqId int64) {
 		dispatch(ci, reqId, handlers.GetLiveGame, d)
 	},
