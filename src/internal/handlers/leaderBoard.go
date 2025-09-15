@@ -38,6 +38,8 @@ func (lb *CrashLeaderboard) Add(bet models.Bet) {
 	}
 	lb.data = append(lb.data, bet)
 
+	log.Println("leaderboard", lb.GetAll())
+
 	log.Println(">>> BEFORE EMIT")
 	events.Emit("all", "leaderboard", lb.GetAll())
 	log.Println(">>> AFTER EMIT")
