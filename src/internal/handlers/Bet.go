@@ -266,7 +266,7 @@ func CheckoutBet(data map[string]interface{}) (models.HandlerOK, models.HandlerE
 	}
 	// Sanitize and build query
 	query := fmt.Sprintf(
-		`Update g2_bets SET bet = '%s', WHERE id = %d`,
+		`Update g2_bets SET bet = '%s' WHERE id = %d`,
 		string(betJSON),
 		bet.ID,
 	)
