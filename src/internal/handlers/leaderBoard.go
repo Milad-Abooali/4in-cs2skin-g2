@@ -59,7 +59,7 @@ func GetLeaderboard(_ map[string]interface{}) (models.HandlerOK, models.HandlerE
 
 	events.Emit("all", "leaderboard", Leaderboard.GetAll())
 
-	// Success
+	// Success -
 	resR.Type = "getLeaderboard"
 	resR.Data = Leaderboard.GetAll()
 	return resR, errR
