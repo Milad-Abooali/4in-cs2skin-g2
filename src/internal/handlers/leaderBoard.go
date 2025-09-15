@@ -38,10 +38,9 @@ func (lb *CrashLeaderboard) Add(bet models.Bet) {
 	}
 	lb.data = append(lb.data, bet)
 
-	// Emit event whenever leaderboard changes
+	log.Println(">>> BEFORE EMIT")
 	events.Emit("all", "leaderboard", lb.GetAll())
-
-	log.Println("Leaderboard ", lb.GetAll())
+	log.Println(">>> AFTER EMIT")
 
 }
 
