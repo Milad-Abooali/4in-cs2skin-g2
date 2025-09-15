@@ -147,7 +147,7 @@ func startGameLoop(game models.Game) {
 }
 
 func endGame(game models.Game) {
-	time.Sleep(50 * time.Millisecond)
+	time.Sleep(3000 * time.Millisecond)
 
 	// Bombing
 	LiveGame.GameState = StateBombing
