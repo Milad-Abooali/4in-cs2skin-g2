@@ -40,6 +40,9 @@ func (lb *CrashLeaderboard) Add(bet models.Bet) {
 
 	// Emit event whenever leaderboard changes
 	events.Emit("all", "leaderboard", lb.GetAll())
+
+	log.Println("Leaderboard ", lb.GetAll())
+
 }
 
 // GetAll returns a snapshot of leaderboard
