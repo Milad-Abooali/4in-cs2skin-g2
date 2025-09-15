@@ -100,7 +100,7 @@ func startGameLoop(game models.Game) {
 	go func() {
 		speed := 500
 		if game.CrashAt < 5 {
-			speed -= 400
+			speed -= 350
 		}
 		if game.CrashAt > 5 && game.CrashAt < 25 {
 			speed -= 250
@@ -109,7 +109,7 @@ func startGameLoop(game models.Game) {
 			speed -= 350
 		}
 		if game.CrashAt > 75 {
-			speed -= 300
+			speed -= 250
 		}
 		multiplier := 0.99
 		for {
@@ -153,7 +153,7 @@ func endGame(game models.Game) {
 	LiveGame.GameState = StateBombing
 	log.Printf("Game %d Bombing", game.ID)
 	events.Emit("all", "liveGame", LiveGame)
-	time.Sleep(1500 * time.Millisecond)
+	time.Sleep(3000 * time.Millisecond)
 
 	// Update DB
 	gameJSON, err := json.Marshal(game)
