@@ -87,7 +87,7 @@ func NextGame(id int64) {
 	}
 	log.Printf("Game %d waiting for bets", newGame.ID)
 	events.Emit("all", "liveGame", LiveGame)
-	time.Sleep(5000 * time.Millisecond)
+	time.Sleep(15000 * time.Millisecond)
 
 	// Force Start
 	LiveGame.GameState = StateRunning
@@ -172,14 +172,14 @@ func endGame(game models.Game) {
 		log.Fatalln("NOT_UPDATED", dataDB)
 	}
 	LiveGame.GameState = StateFinished
-	events.Emit("all", "liveGame", LiveGame)
+	// events.Emit("all", "liveGame", LiveGame)
 
-	// time.Sleep(3000 * time.Millisecond)
+	// time.Sleep(1000 * time.Millisecond)
 	log.Printf("Game %d Ended", game.ID)
 
 	// Emit History
 	History.Add(game.CrashAt)
-	// events.Emit("all", "history", History.GetAll())
+	events.Emit("all", "history", History.GetAll())
 
 	// Call Next Game
 	NextGame(game.ID + 1)
