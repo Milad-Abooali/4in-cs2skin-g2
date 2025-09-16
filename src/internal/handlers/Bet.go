@@ -3,6 +3,7 @@ package handlers
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/Milad-Abooali/4in-cs2skin-g2/src/apiapp"
 	"github.com/Milad-Abooali/4in-cs2skin-g2/src/internal/events"
 	"github.com/Milad-Abooali/4in-cs2skin-g2/src/internal/grpcclient"
 	"github.com/Milad-Abooali/4in-cs2skin-g2/src/internal/models"
@@ -234,6 +235,7 @@ func CheckoutBet(data map[string]interface{}) (models.HandlerOK, models.HandlerE
 	userData := resp["data"].(map[string]interface{})
 	profile := userData["profile"].(map[string]interface{})
 	userID := int(profile["id"].(float64))
+	// displayName := profile["display_name"].(string)
 
 	// Check Bet
 	betID, vErr, ok := validate.RequireInt(data, "betID")
@@ -314,6 +316,14 @@ func CheckoutBet(data map[string]interface{}) (models.HandlerOK, models.HandlerE
 
 	events.Emit("all", "liveBets", LiveBets)
 
+	// Send Live Winner
+	go sendLiveWinner(
+		int64(userID),
+		strconv.FormatFloat(bet.Bet, 'f', 2, 64),
+		strconv.FormatFloat(bet.Multiplier, 'f', 2, 64),
+		strconv.FormatFloat(bet.Payout, 'f', 2, 64),
+	)
+
 	// Success
 	resR.Type = "checkOutBet"
 	resR.Data = nil
@@ -344,15 +354,15 @@ func processStep(multiplier float64) {
 	}
 }
 
-func sendPayout(userID int64, betID int64, payout float64) {
+func sendPayout(userID int64, betID int64, payout float64) bool {
 	// Get Bet by ID (returns pointer)
 	bet, ok := getBet(userID, betID)
 	if !ok {
-		return
+		return false
 	}
 
 	if bet.Payout > 0 {
-		return
+		return false
 	}
 
 	// Add Transaction
@@ -365,11 +375,11 @@ func sendPayout(userID int64, betID int64, payout float64) {
 		"Crash",
 	)
 	if err != nil {
-		return
+		return false
 	}
 	_, status, _ := utils.SafeExtractErrorStatus(Transaction)
 	if status != 1 {
-		return
+		return false
 	}
 
 	// Update bet in memory (no need to reassign slice element)
@@ -380,6 +390,7 @@ func sendPayout(userID int64, betID int64, payout float64) {
 	betJSON, err := json.Marshal(bet)
 	if err != nil {
 		log.Fatalln("Failed to marshal bet:", err)
+		return false
 	}
 
 	query := fmt.Sprintf(
@@ -390,15 +401,27 @@ func sendPayout(userID int64, betID int64, payout float64) {
 	res, err := grpcclient.SendQuery(query)
 	if err != nil || res == nil || res.Status != "ok" {
 		log.Fatalln("GRPC_ERROR", err)
+		return false
 	}
 	dataDB := res.Data.GetFields()
 	exist := dataDB["rows_affected"].GetNumberValue()
 	if exist == 0 {
 		log.Fatalln("NOT_UPDATED", dataDB)
+		return false
 	}
 
 	Leaderboard.Add(*bet)
 	events.Emit("all", "liveBets", LiveBets)
+
+	// Send Live Winner
+	go sendLiveWinner(
+		userID,
+		strconv.FormatFloat(bet.Bet, 'f', 2, 64),
+		strconv.FormatFloat(bet.Multiplier, 'f', 2, 64),
+		strconv.FormatFloat(bet.Payout, 'f', 2, 64),
+	)
+
+	return true
 }
 
 func getBet(userID, betID int64) (*models.Bet, bool) {
@@ -412,4 +435,20 @@ func getBet(userID, betID int64) (*models.Bet, bool) {
 		}
 	}
 	return nil, false
+}
+
+func sendLiveWinner(userID int64, bet string, multiplier string, payout string) bool {
+	apiAppErr := apiapp.InsertWinner(
+		2,
+		time.Now(),
+		userID,
+		bet,
+		multiplier,
+		payout,
+	)
+	if apiAppErr != nil {
+		log.Println("Error:", apiAppErr)
+		return false
+	}
+	return true
 }
