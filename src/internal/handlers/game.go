@@ -108,19 +108,19 @@ func startGameLoop(game models.Game) {
 				go endGame(game)
 				break
 			}
-			if speed > 10 {
+			if speed > 20 {
 				speed--
 			}
-			if speed > 15 {
+			if speed > 30 {
 				speed--
 			}
-			if speed > 25 {
+			if speed > 40 {
 				speed--
 			}
-			if speed > 50 {
+			if speed > 60 {
 				speed--
 			}
-			if speed > 75 {
+			if speed > 80 {
 				speed--
 			}
 			if speed > 100 {
