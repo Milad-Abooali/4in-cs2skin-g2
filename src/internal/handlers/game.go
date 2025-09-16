@@ -100,7 +100,7 @@ func startGameLoop(game models.Game) {
 	time.Sleep(2000 * time.Millisecond)
 
 	go func() {
-		speed := 150
+		speed := 100
 		multiplier := 1.00
 		for {
 			if LiveGame == nil || LiveGame.GameState != StateRunning {
@@ -108,25 +108,7 @@ func startGameLoop(game models.Game) {
 				go endGame(game)
 				break
 			}
-			if speed > 20 {
-				speed--
-			}
-			if speed > 30 {
-				speed--
-			}
-			if speed > 40 {
-				speed--
-			}
-			if speed > 60 {
-				speed--
-			}
-			if speed > 80 {
-				speed--
-			}
-			if speed > 100 {
-				speed--
-			}
-			if speed > 125 {
+			if speed > 25 {
 				speed--
 			}
 			time.Sleep(time.Duration(speed) * time.Millisecond)
