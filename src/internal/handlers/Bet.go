@@ -72,6 +72,40 @@ func AddBet(data map[string]interface{}) (models.HandlerOK, models.HandlerError)
 		return resR, vErr
 	}
 
+	// Check Bet Limits per User
+	userBets := LiveBets[int64(userID)]
+
+	// User bets counts
+	if len(userBets) >= 10 {
+		errR.Type = "BET_LIMIT_REACHED"
+		errR.Code = 8006
+		return resR, errR
+	}
+
+	// User bets Amounts
+	var userTotal float64
+	for _, b := range userBets {
+		userTotal += b.Bet
+	}
+	if userTotal+bet > 200 {
+		errR.Type = "BET_LIMIT_REACHED"
+		errR.Code = 8006
+		return resR, errR
+	}
+
+	// Game Max Bet Amount
+	var allTotal float64
+	for _, bets := range LiveBets {
+		for _, b := range bets {
+			allTotal += b.Bet
+		}
+	}
+	if allTotal+bet > 10000 {
+		errR.Type = "GAME_MAX_BET_REACHED"
+		errR.Code = 8007
+		return resR, errR
+	}
+
 	// Check Balance
 	if balance < bet {
 		errR.Type = "INSUFFICIENT_BALANCE"
