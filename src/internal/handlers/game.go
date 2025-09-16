@@ -97,22 +97,10 @@ func NextGame(id int64) {
 
 func startGameLoop(game models.Game) {
 	events.Emit("all", "liveGame", LiveGame)
-	time.Sleep(5000 * time.Millisecond)
+	time.Sleep(2000 * time.Millisecond)
 
 	go func() {
 		speed := 500
-		if game.CrashAt < 5 {
-			speed -= 350
-		}
-		if game.CrashAt > 5 && game.CrashAt < 25 {
-			speed -= 250
-		}
-		if game.CrashAt > 25 && game.CrashAt < 75 {
-			speed -= 350
-		}
-		if game.CrashAt > 75 {
-			speed -= 250
-		}
 		multiplier := 0.99
 		for {
 			if LiveGame == nil || LiveGame.GameState != StateRunning {
@@ -120,7 +108,13 @@ func startGameLoop(game models.Game) {
 				go endGame(game)
 				break
 			}
-			if speed > 25 {
+			if speed > 15 {
+				speed--
+			}
+			if speed > 100 {
+				speed--
+			}
+			if speed > 400 {
 				speed--
 			}
 			time.Sleep(time.Duration(speed) * time.Millisecond)
@@ -149,7 +143,7 @@ func startGameLoop(game models.Game) {
 }
 
 func endGame(game models.Game) {
-	time.Sleep(2000 * time.Millisecond)
+	time.Sleep(3000 * time.Millisecond)
 
 	// Update DB
 	gameJSON, err := json.Marshal(game)
