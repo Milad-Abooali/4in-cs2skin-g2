@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"os"
 	"time"
@@ -24,6 +25,8 @@ func InsertWinner(gid int, gtime time.Time, displayName string, bet string, mult
 	if err != nil {
 		return fmt.Errorf("marshal error: %w", err)
 	}
+
+	log.Println(jsonData)
 
 	req, err := http.NewRequest("POST", apiURL+"/recent_winners/insert", bytes.NewBuffer(jsonData))
 	if err != nil {
