@@ -235,7 +235,7 @@ func CheckoutBet(data map[string]interface{}) (models.HandlerOK, models.HandlerE
 	userData := resp["data"].(map[string]interface{})
 	profile := userData["profile"].(map[string]interface{})
 	userID := int(profile["id"].(float64))
-	// displayName := profile["display_name"].(string)
+	displayName := profile["display_name"].(string)
 
 	// Check Bet
 	betID, vErr, ok := validate.RequireInt(data, "betID")
@@ -318,7 +318,7 @@ func CheckoutBet(data map[string]interface{}) (models.HandlerOK, models.HandlerE
 
 	// Send Live Winner
 	go sendLiveWinner(
-		int64(userID),
+		displayName,
 		strconv.FormatFloat(bet.Bet, 'f', 2, 64),
 		strconv.FormatFloat(bet.Multiplier, 'f', 2, 64),
 		strconv.FormatFloat(bet.Payout, 'f', 2, 64),
@@ -415,7 +415,7 @@ func sendPayout(userID int64, betID int64, payout float64) bool {
 
 	// Send Live Winner
 	go sendLiveWinner(
-		userID,
+		bet.DisplayName,
 		strconv.FormatFloat(bet.Bet, 'f', 2, 64),
 		strconv.FormatFloat(bet.Multiplier, 'f', 2, 64),
 		strconv.FormatFloat(bet.Payout, 'f', 2, 64),
@@ -437,11 +437,11 @@ func getBet(userID, betID int64) (*models.Bet, bool) {
 	return nil, false
 }
 
-func sendLiveWinner(userID int64, bet string, multiplier string, payout string) bool {
+func sendLiveWinner(displayName string, bet string, multiplier string, payout string) bool {
 	apiAppErr := apiapp.InsertWinner(
 		2,
 		time.Now(),
-		userID,
+		displayName,
 		bet,
 		multiplier,
 		payout,
