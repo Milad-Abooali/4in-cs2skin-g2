@@ -26,7 +26,7 @@ func InsertWinner(gid int, gtime time.Time, displayName string, bet string, mult
 		return fmt.Errorf("marshal error: %w", err)
 	}
 
-	log.Println(jsonData)
+	log.Println(payload)
 
 	req, err := http.NewRequest("POST", apiURL+"/recent_winners/insert", bytes.NewBuffer(jsonData))
 	if err != nil {
