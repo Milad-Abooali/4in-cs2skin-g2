@@ -40,6 +40,9 @@ var wsRoutes = map[string]func(*ConnInfo, map[string]interface{}, int64){
 	"checkoutBet": func(ci *ConnInfo, d map[string]interface{}, reqId int64) {
 		dispatch(ci, reqId, handlers.CheckoutBet, d)
 	},
+	"checkoutAll": func(ci *ConnInfo, d map[string]interface{}, reqId int64) {
+		dispatch(ci, reqId, handlers.CheckoutAll, d)
+	},
 	"getLiveBets": func(ci *ConnInfo, d map[string]interface{}, reqId int64) {
 		dispatch(ci, reqId, handlers.GetLiveBets, d)
 	},
