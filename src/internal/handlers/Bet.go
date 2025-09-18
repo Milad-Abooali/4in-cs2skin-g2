@@ -336,16 +336,14 @@ func CheckoutAll(data map[string]interface{}) (models.HandlerOK, models.HandlerE
 		resR models.HandlerOK
 	)
 
-	// Check Live Game
 	if LiveGame.GameState != StateRunning {
 		errR.Type = "GAME_NOT_RUNNING"
 		errR.Code = 8002
 		return resR, errR
 	}
-
 	multiplier := LiveGame.Multiplier
 
-	// Check Token
+	// === JWT Check ===
 	userJWT, vErr, ok := validate.RequireString(data, "token", false)
 	if !ok {
 		return resR, vErr
@@ -365,99 +363,79 @@ func CheckoutAll(data map[string]interface{}) (models.HandlerOK, models.HandlerE
 	}
 	userData := resp["data"].(map[string]interface{})
 	profile := userData["profile"].(map[string]interface{})
-	userID := int(profile["id"].(float64))
-	displayName := profile["display_name"].(string)
+	userID := int64(profile["id"].(float64))
 
-	// Get All Bet
-	betID, vErr, ok := validate.RequireInt(data, "betID")
-	if !ok {
-		return resR, vErr
-	}
-
-	// Get Bet
-	bet, ok := getBet(int64(userID), betID)
-	if !ok {
-		errR.Type = "BET_NOT_FOUND"
-		errR.Code = 8003
+	bets, ok := LiveBets[userID]
+	if !ok || len(bets) == 0 {
+		errR.Type = "NO_BETS_FOUND"
+		errR.Code = 8008
 		return resR, errR
 	}
 
-	if bet.Multiplier <= multiplier {
-		errR.Type = "BET_ALREADY_CRASHED"
-		errR.Code = 8004
-		return resR, errR
-	}
+	closed := 0
+	for i := range bets {
+		bet := &bets[i]
 
-	if bet.Payout > 0 {
-		errR.Type = "BET_ALREADY_PAID"
-		errR.Code = 8005
-		return resR, errR
-	}
-
-	// Win Price
-	winAmount := utils.RoundToTwoDigits(bet.Bet * multiplier)
-
-	// Add Transaction
-	Transaction, err := utils.AddTransaction(
-		userID,
-		"game_win",
-		"2",
-		winAmount,
-		strconv.FormatInt(bet.ID, 10),
-		"Crash",
-	)
-	if err != nil {
-		return resR, models.HandlerError{}
-	}
-	errCode, status, errType = utils.SafeExtractErrorStatus(Transaction)
-	if status != 1 {
-		errR.Type = errType
-		errR.Code = errCode
-		if resp["data"] != nil {
-			errR.Data = resp["data"]
+		if bet.Payout > 0 || bet.Multiplier <= multiplier {
+			continue
 		}
-		return resR, errR
+
+		winAmount := utils.RoundToTwoDigits(bet.Bet * multiplier)
+
+		Transaction, err := utils.AddTransaction(
+			int(userID),
+			"game_win",
+			"2",
+			winAmount,
+			strconv.FormatInt(bet.ID, 10),
+			"Crash",
+		)
+		if err != nil {
+			log.Println("CheckoutAll > AddTransaction error:", err)
+			continue
+		}
+		errCode, status, errType = utils.SafeExtractErrorStatus(Transaction)
+		if status != 1 {
+			log.Println("CheckoutAll > Transaction failed:", errType, errCode)
+			continue
+		}
+
+		bet.Payout = winAmount
+		bet.CheckoutBy = "User"
+		bet.CheckoutOn = multiplier
+
+		betJSON, err := json.Marshal(bet)
+		if err != nil {
+			log.Println("CheckoutAll > Marshal error:", err)
+			continue
+		}
+		query := fmt.Sprintf(
+			`UPDATE g2_bets SET bet = '%s' WHERE id = %d`,
+			string(betJSON),
+			bet.ID,
+		)
+		res, err := grpcclient.SendQuery(query)
+		if err != nil || res == nil || res.Status != "ok" {
+			log.Println("CheckoutAll > GRPC update error:", err)
+			continue
+		}
+
+		Leaderboard.Add(*bet)
+		events.Emit("all", "liveBets", LiveBets)
+
+		go sendLiveWinner(
+			bet.DisplayName,
+			strconv.FormatFloat(bet.Bet, 'f', 2, 64),
+			strconv.FormatFloat(bet.Multiplier, 'f', 2, 64),
+			strconv.FormatFloat(bet.Payout, 'f', 2, 64),
+		)
+		closed++
 	}
 
-	bet.Payout = winAmount
-	bet.CheckoutBy = "User"
-
-	// Update DB
-	betJSON, err := json.Marshal(bet)
-	if err != nil {
-		log.Fatalln("Failed to marshal bet:", err)
+	resR.Type = "checkOutAll"
+	resR.Data = map[string]interface{}{
+		"closed_count": closed,
 	}
-	// Sanitize and build query
-	query := fmt.Sprintf(
-		`Update g2_bets SET bet = '%s' WHERE id = %d`,
-		string(betJSON),
-		bet.ID,
-	)
-	res, err := grpcclient.SendQuery(query)
-	if err != nil || res == nil || res.Status != "ok" {
-		log.Fatalln("GRPC_ERROR", err)
-	}
-	dataDB := res.Data.GetFields()
-	exist := dataDB["rows_affected"].GetNumberValue()
-	if exist == 0 {
-		log.Fatalln("NOT_UPDATED", dataDB)
-	}
-
-	Leaderboard.Add(*bet)
-
-	events.Emit("all", "liveBets", LiveBets)
-
-	// Send Live Winner
-	go sendLiveWinner(
-		displayName,
-		strconv.FormatFloat(bet.Bet, 'f', 2, 64),
-		strconv.FormatFloat(bet.Multiplier, 'f', 2, 64),
-		strconv.FormatFloat(bet.Payout, 'f', 2, 64),
-	)
-
-	// Success
-	resR.Type = "checkOutBet"
-	resR.Data = nil
 	return resR, errR
 }
 
