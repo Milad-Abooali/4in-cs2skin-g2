@@ -140,6 +140,29 @@ func AddBet(data map[string]interface{}) (models.HandlerOK, models.HandlerError)
 		return resR, errR
 	}
 
+	// HE
+	LiveGame.Tracker.AddIncome(bet)
+
+	// Add XP
+	AddXp, err := utils.AddXp(
+		userID,
+		int(0.6*bet),
+		"Add Bet",
+		"G2",
+	)
+	if err != nil {
+		return resR, models.HandlerError{}
+	}
+	errCode, status, errType = utils.SafeExtractErrorStatus(AddXp)
+	if status != 1 {
+		errR.Type = errType
+		errR.Code = errCode
+		if resp["data"] != nil {
+			errR.Data = resp["data"]
+		}
+		return resR, errR
+	}
+
 	// Creat Bet
 	newBet := models.Bet{
 		ID:          0,
@@ -288,6 +311,9 @@ func CheckoutBet(data map[string]interface{}) (models.HandlerOK, models.HandlerE
 		return resR, errR
 	}
 
+	// HE
+	LiveGame.Tracker.AddExpense(winAmount)
+
 	bet.Payout = winAmount
 	bet.CheckoutBy = "User"
 
@@ -400,6 +426,9 @@ func CheckoutAll(data map[string]interface{}) (models.HandlerOK, models.HandlerE
 			continue
 		}
 
+		// HE
+		LiveGame.Tracker.AddExpense(winAmount)
+
 		bet.Payout = winAmount
 		bet.CheckoutBy = "User"
 		bet.CheckoutOn = multiplier
@@ -490,6 +519,9 @@ func sendPayout(userID int64, betID int64, payout float64) bool {
 	if status != 1 {
 		return false
 	}
+
+	// HE
+	LiveGame.Tracker.AddExpense(payout)
 
 	// Update bet in memory (no need to reassign slice element)
 	bet.Payout = payout

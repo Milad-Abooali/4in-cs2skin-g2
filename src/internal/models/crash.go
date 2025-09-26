@@ -1,13 +1,17 @@
 package models
 
-import "time"
+import (
+	"github.com/Milad-Abooali/4in-cs2skin-g2/src/internal/he"
+	"time"
+)
 
 type LiveGame struct {
-	ID             int64   `json:"id"`
-	Multiplier     float64 `json:"multiplier"`
-	GameState      int     `json:"gameState"`
-	ServerSeedHash string  `json:"serverSeedHash"`
-	ServerTime     int64   `json:"serverTime"`
+	ID             int64       `json:"id"`
+	Multiplier     float64     `json:"multiplier"`
+	GameState      int         `json:"gameState"`
+	ServerSeedHash string      `json:"serverSeedHash"`
+	ServerTime     int64       `json:"serverTime"`
+	Tracker        *he.Tracker `json:"-"`
 }
 
 type Bet struct {

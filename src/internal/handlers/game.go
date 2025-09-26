@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/Milad-Abooali/4in-cs2skin-g2/src/internal/events"
 	"github.com/Milad-Abooali/4in-cs2skin-g2/src/internal/grpcclient"
+	"github.com/Milad-Abooali/4in-cs2skin-g2/src/internal/he"
 	"github.com/Milad-Abooali/4in-cs2skin-g2/src/internal/models"
 	"github.com/Milad-Abooali/4in-cs2skin-g2/src/internal/provablyfair"
 	"github.com/Milad-Abooali/4in-cs2skin-g2/src/utils"
@@ -84,6 +85,7 @@ func NextGame(id int64) {
 		ServerSeedHash: newGame.ServerSeed,
 		Multiplier:     newGame.Multiplier,
 		ServerTime:     time.Now().UnixMilli(),
+		Tracker:        he.NewTracker(),
 	}
 	log.Printf("Game %d waiting for bets", newGame.ID)
 	events.Emit("all", "liveGame", LiveGame)
