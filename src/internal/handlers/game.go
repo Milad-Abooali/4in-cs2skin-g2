@@ -109,6 +109,18 @@ func startGameLoop(game models.Game) {
 				break
 			}
 
+			if game.CrashAt > 20 {
+				speed--
+			}
+
+			if game.CrashAt > 40 {
+				speed--
+			}
+
+			if game.CrashAt > 60 {
+				speed--
+			}
+
 			if speed > 10 {
 				speed--
 			}
