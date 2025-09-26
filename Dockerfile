@@ -17,7 +17,6 @@ FROM alpine:latest
 
 RUN apk --no-cache add ca-certificates libwebp-tools
 
-
 WORKDIR /app
 COPY --from=builder /app/app .
 COPY src/configs ./configs
