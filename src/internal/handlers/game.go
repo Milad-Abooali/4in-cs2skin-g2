@@ -121,7 +121,15 @@ func startGameLoop(game models.Game) {
 					speed--
 				}
 
+				if game.CrashAt > 30 {
+					speed--
+				}
+
 				if game.CrashAt > 40 {
+					speed--
+				}
+
+				if game.CrashAt > 50 {
 					speed--
 				}
 
