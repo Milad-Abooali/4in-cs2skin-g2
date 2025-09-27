@@ -220,6 +220,8 @@ func endGame(game models.Game) {
 	LiveGame.GameState = StateFinished
 	// events.Emit("all", "liveGame", LiveGame)
 
+	LiveGame.Tracker.Save("g2_games", int(LiveGame.ID))
+
 	// time.Sleep(1000 * time.Millisecond)
 	log.Printf("Game %d Ended", game.ID)
 
