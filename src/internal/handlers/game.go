@@ -37,7 +37,30 @@ func GetLiveGame(_ map[string]interface{}) (models.HandlerOK, models.HandlerErro
 
 func NextGame(id int64) {
 	serverSeed, serverSeedHash := provablyfair.GenerateServerSeed()
-	crashAt := utils.RoundToTwoDigits(provablyfair.CalculateCrashMultiplier(serverSeed))
+
+	HE, _ := he.GetAvgHE("g1_games", 30)
+
+	var crashAt float64
+	if HE > 8 || HE == 0 {
+		crashAt = utils.RoundToTwoDigits(provablyfair.CalculateCrashMultiplier(serverSeed))
+	}
+	if HE > 0 && HE < 8 {
+		for {
+			crashAt = utils.RoundToTwoDigits(provablyfair.CalculateCrashMultiplier(serverSeed))
+			if crashAt < 5 {
+				break
+			}
+		}
+	}
+	if HE < 0 {
+		for {
+			crashAt = utils.RoundToTwoDigits(provablyfair.CalculateCrashMultiplier(serverSeed))
+			if crashAt < 3 {
+				break
+			}
+		}
+	}
+
 	newGame := models.Game{
 		ID:             id,
 		StartAt:        time.Now().UTC(),
